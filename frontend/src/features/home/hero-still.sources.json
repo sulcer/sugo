@@ -1,0 +1,23 @@
+{
+  "sha256": "151ae40b0d62b2a4d597a37e0b0fcb4f9975eba03658bde2a7674e1fbe684a5f",
+  "sources": [
+    "node_modules/three/build/three.core.js",
+    "node_modules/three/build/three.module.js",
+    "scripts/hero-still-entry.ts",
+    "src/drawing/geometry/index.ts",
+    "src/drawing/geometry/layer.ts",
+    "src/drawing/geometry/machines.ts",
+    "src/drawing/geometry/map.ts",
+    "src/drawing/geometry/milled.ts",
+    "src/drawing/geometry/parts-table.ts",
+    "src/drawing/geometry/path.ts",
+    "src/drawing/geometry/turned.ts",
+    "src/features/home/hero-part.ts",
+    "src/three/environment.ts",
+    "src/three/materials.ts",
+    "src/three/milled-mesh.ts",
+    "src/three/model-scene.ts",
+    "src/three/stage.ts",
+    "src/three/turned-mesh.ts"
+  ]
+}

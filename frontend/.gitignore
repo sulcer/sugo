@@ -38,3 +38,8 @@ next-env.d.ts
 
 # nodemodules
 node_modules
+
+# playwright
+/playwright-report
+/test-results
+/blob-report
