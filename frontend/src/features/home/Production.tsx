@@ -8,7 +8,11 @@ export function Production({ locale }: { locale: Locale }) {
     <section className="flex flex-col items-center border-t border-rule px-gutter pt-[clamp(28px,3.5cqw,48px)] pb-[clamp(20px,2.5cqw,32px)]">
       <Counters locale={locale} buildYear={new Date().getFullYear()} />
       <div className="relative w-full @max-wide:pt-7 @max-wide:pb-2 @wide:h-[clamp(260px,24cqw,340px)]">
-        <PartsFloor className="w-full @max-wide:aspect-[2.7] @wide:absolute @wide:top-[2%] @wide:left-0 @wide:h-[96%]" />
+        {/* Narrow sheets size the floor by its aspect; wide ones give it an explicit box, which wins. */}
+        <PartsFloor
+          aspect={2.7}
+          className="w-full @wide:absolute @wide:top-[2%] @wide:left-0 @wide:h-[96%]"
+        />
       </div>
     </section>
   );
