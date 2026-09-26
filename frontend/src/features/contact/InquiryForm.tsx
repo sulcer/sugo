@@ -39,7 +39,16 @@ export function InquiryForm(props: InquiryFormProps) {
 
 function Inquiry({ locale, privacyHref, action, onAgain }: InquiryFormProps & { onAgain: () => void }) {
   const copy = INQUIRY[locale];
-  const [state, submit, pending] = useActionState<InquiryState, FormData>(action, { status: 'idle' });
+  // A dropped connection or a deployment between load and submit rejects the action. Nothing above
+  // this form catches that, so the page would die and take the visitor's message with it.
+  const deliver = async (previous: InquiryState, form: FormData): Promise<InquiryState> => {
+    try {
+      return await action(previous, form);
+    } catch {
+      return { status: 'error', reason: 'sendFailed' };
+    }
+  };
+  const [state, submit, pending] = useActionState<InquiryState, FormData>(deliver, { status: 'idle' });
   const [files, setFiles] = useState<File[]>([]);
   const [fileProblem, setFileProblem] = useState<FileProblem | null>(null);
   const [email, setEmail] = useState('');

@@ -116,6 +116,13 @@ describe('InquiryForm', () => {
     expect(await screen.findByText(`! ${copy.errors.sendFailed}`)).toBeInTheDocument();
   });
 
+  it('offers the direct e-mail address when the action never answers', async () => {
+    const user = renderForm();
+    action.mockRejectedValue(new Error('Failed to find Server Action'));
+    await fillAndSend(user);
+    expect(await screen.findByText(`! ${copy.errors.sendFailed}`)).toBeInTheDocument();
+  });
+
   it('tells the visitor to wait when the address has run out of attempts', async () => {
     const user = renderForm({ status: 'error', reason: 'rateLimited' });
     await fillAndSend(user);
