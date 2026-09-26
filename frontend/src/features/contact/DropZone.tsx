@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type RefObject } from 'react';
 import type { INQUIRY } from '@/content/inquiry';
 import { INQUIRY_LIMITS } from '@/features/inquiry/limits';
 import type { Locale } from '@/i18n/locales';
@@ -9,13 +9,14 @@ import { cn } from '@/lib/cn';
 type DropZoneProps = {
   copy: (typeof INQUIRY)[Locale];
   onFiles: (files: File[]) => void;
+  inputRef?: RefObject<HTMLInputElement | null>;
 };
 
 const frame = 'border-ink/45';
 const accept = INQUIRY_LIMITS.extensions.map((extension) => `.${extension}`).join(',');
 
 /** The sheet the drawing is dropped on: a label, so the keyboard and the mouse take the same path. */
-export function DropZone({ copy, onFiles }: DropZoneProps) {
+export function DropZone({ copy, onFiles, inputRef }: DropZoneProps) {
   const [over, setOver] = useState(false);
 
   return (
@@ -59,6 +60,7 @@ export function DropZone({ copy, onFiles }: DropZoneProps) {
         <span className="text-[15px] text-accent underline underline-offset-[3px]">{copy.pick}</span>
       </span>
       <input
+        ref={inputRef}
         type="file"
         multiple
         accept={accept}

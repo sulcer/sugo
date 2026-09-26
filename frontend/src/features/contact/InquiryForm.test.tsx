@@ -103,6 +103,43 @@ describe('InquiryForm', () => {
     expect(await screen.findByText(copy.sent)).toBeInTheDocument();
   });
 
+  it('announces the thanks panel', async () => {
+    const user = renderForm();
+    await fillAndSend(user);
+    expect(await screen.findByRole('status')).toHaveTextContent(copy.sent);
+  });
+
+  it('moves focus to the thanks panel', async () => {
+    const user = renderForm();
+    await fillAndSend(user);
+    expect(await screen.findByText(copy.sent)).toHaveFocus();
+  });
+
+  it('puts focus back on the drop zone for a new enquiry', async () => {
+    const user = renderForm();
+    await fillAndSend(user);
+    await user.click(await screen.findByRole('button', { name: copy.again }));
+    expect(filePicker()).toHaveFocus();
+  });
+
+  it('leaves the drop zone alone when the form first opens', () => {
+    renderForm();
+    expect(filePicker()).not.toHaveFocus();
+  });
+
+  it('focuses the address when it is missing', async () => {
+    const user = renderForm();
+    await user.click(sendButton());
+    expect(screen.getByLabelText(new RegExp(copy.email))).toHaveFocus();
+  });
+
+  it('focuses the consent box when only the consent is missing', async () => {
+    const user = renderForm();
+    await user.type(screen.getByLabelText(new RegExp(copy.email)), 'ana@primer.si');
+    await user.click(sendButton());
+    expect(screen.getByRole('checkbox')).toHaveFocus();
+  });
+
   it('offers a fresh form after a sent inquiry', async () => {
     const user = renderForm();
     await fillAndSend(user);

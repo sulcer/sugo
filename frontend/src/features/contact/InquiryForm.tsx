@@ -34,10 +34,49 @@ const sameFile = (a: File, b: File) =>
 export function InquiryForm(props: InquiryFormProps) {
   // `useActionState` has no reset, so a new enquiry gets a new form: empty fields and a new clock.
   const [attempt, setAttempt] = useState(0);
-  return <Inquiry key={attempt} {...props} onAgain={() => setAttempt((count) => count + 1)} />;
+  return (
+    <Inquiry
+      key={attempt}
+      {...props}
+      restarted={attempt > 0}
+      onAgain={() => setAttempt((count) => count + 1)}
+    />
+  );
 }
 
-function Inquiry({ locale, privacyHref, action, onAgain }: InquiryFormProps & { onAgain: () => void }) {
+/** The sent panel takes the focus with it, so the outcome is not left for the visitor to discover. */
+function SentPanel({ copy, onAgain }: { copy: (typeof INQUIRY)[Locale]; onAgain: () => void }) {
+  const headline = useRef<HTMLDivElement>(null);
+  useEffect(() => headline.current?.focus(), []);
+  return (
+    <div
+      role="status"
+      className={cn(column, 'flex flex-col items-start gap-5 border border-ink bg-panel px-8 py-12')}
+    >
+      <div className="font-mono text-[11px] leading-none font-medium tracking-[.12em] text-accent uppercase">
+        ✓ OK
+      </div>
+      <div ref={headline} tabIndex={-1} className="text-[26px] font-medium tracking-[-.01em]">
+        {copy.sent}
+      </div>
+      <button
+        type="button"
+        onClick={onAgain}
+        className="cursor-pointer border-b border-ink pb-0.5 text-[15px] hover:border-accent hover:text-accent"
+      >
+        {copy.again}
+      </button>
+    </div>
+  );
+}
+
+function Inquiry({
+  locale,
+  privacyHref,
+  action,
+  restarted,
+  onAgain,
+}: InquiryFormProps & { restarted: boolean; onAgain: () => void }) {
   const copy = INQUIRY[locale];
   // A dropped connection or a deployment between load and submit rejects the action. Nothing above
   // this form catches that, so the page would die and take the visitor's message with it.
@@ -55,12 +94,20 @@ function Inquiry({ locale, privacyHref, action, onAgain }: InquiryFormProps & { 
   const [consent, setConsent] = useState(false);
   const [tried, setTried] = useState(false);
   const startedAt = useRef(0);
+  const emailField = useRef<HTMLInputElement>(null);
+  const consentBox = useRef<HTMLInputElement>(null);
+  const dropZone = useRef<HTMLInputElement>(null);
 
   // The server's spam guard reads how long the visitor had the form in front of them. It is measured
   // here, on one monotonic clock, so a machine whose wall clock is off still gets its inquiry sent.
   useEffect(() => {
     startedAt.current = performance.now();
   }, []);
+
+  // A second enquiry starts where the first one did, not at the top of the page.
+  useEffect(() => {
+    if (restarted) dropZone.current?.focus();
+  }, [restarted]);
 
   const emailError = tried && !LOOKS_LIKE_EMAIL.test(email);
   const consentError = tried && !consent;
@@ -82,7 +129,10 @@ function Inquiry({ locale, privacyHref, action, onAgain }: InquiryFormProps & { 
     // The list decides, not the last refusal: a rejected drop must not block the form for good.
     const problem = checkFiles(files);
     setFileProblem(problem);
-    if (!LOOKS_LIKE_EMAIL.test(email) || !consent || problem) return;
+    const addressMissing = !LOOKS_LIKE_EMAIL.test(email);
+    if (addressMissing) emailField.current?.focus();
+    else if (!consent) consentBox.current?.focus();
+    if (addressMissing || !consent || problem) return;
     const data = new FormData(event.currentTarget);
     data.set('locale', locale);
     data.set('elapsedMs', String(performance.now() - startedAt.current));
@@ -90,22 +140,7 @@ function Inquiry({ locale, privacyHref, action, onAgain }: InquiryFormProps & { 
     startTransition(() => submit(data));
   };
 
-  if (state.status === 'sent')
-    return (
-      <div className={cn(column, 'flex flex-col items-start gap-5 border border-ink bg-panel px-8 py-12')}>
-        <div className="font-mono text-[11px] leading-none font-medium tracking-[.12em] text-accent uppercase">
-          ✓ OK
-        </div>
-        <div className="text-[26px] font-medium tracking-[-.01em]">{copy.sent}</div>
-        <button
-          type="button"
-          onClick={onAgain}
-          className="cursor-pointer border-b border-ink pb-0.5 text-[15px] hover:border-accent hover:text-accent"
-        >
-          {copy.again}
-        </button>
-      </div>
-    );
+  if (state.status === 'sent') return <SentPanel copy={copy} onAgain={onAgain} />;
 
   return (
     <form onSubmit={onSubmit} noValidate className={cn(column, 'flex flex-col gap-5')}>
@@ -120,7 +155,7 @@ function Inquiry({ locale, privacyHref, action, onAgain }: InquiryFormProps & { 
         className="absolute left-[-9999px] h-0 w-0 opacity-0"
       />
 
-      <DropZone copy={copy} onFiles={addFiles} />
+      <DropZone copy={copy} onFiles={addFiles} inputRef={dropZone} />
       {fileProblem && (
         <p role="alert" className={errorLine}>
           ! {copy.errors[fileProblem]}
@@ -139,6 +174,7 @@ function Inquiry({ locale, privacyHref, action, onAgain }: InquiryFormProps & { 
         <label className="flex min-w-0 flex-[1_1_240px] flex-col gap-2">
           <span className={label}>{copy.email} *</span>
           <input
+            ref={emailField}
             type="email"
             name="email"
             value={email}
@@ -178,6 +214,7 @@ function Inquiry({ locale, privacyHref, action, onAgain }: InquiryFormProps & { 
       <div className="flex items-start gap-3">
         <label className="-m-3 flex h-11 w-11 flex-none cursor-pointer items-center justify-center">
           <input
+            ref={consentBox}
             type="checkbox"
             name="consent"
             checked={consent}
