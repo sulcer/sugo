@@ -1,3 +1,4 @@
+import { expect, it } from 'vitest';
 import { circle, clipSegment, line, polyline, rect, round2, roundedRect } from './path';
 
 it('rounds to two decimals like the design engine', () => {

@@ -4,10 +4,14 @@
  * three scales. The port must reproduce it exactly, path for path and in the same order (the order
  * drives the plotter animation).
  */
+import { describe, expect, it } from 'vitest';
 import fixtures from '../__fixtures__/design-geometry.json';
 import type { Drawing } from './layer';
 import { PART_GEOMETRY, type PartKind } from './parts-table';
+import { PARTS_FLOOR, floorPlacements } from './batch';
+import { drawSubject, viewBoxOf, type DrawingSubject } from './index';
 import { MACHINE_KINDS, drawMachine } from './machines';
+import { drawMap } from './map';
 import { drawMilled } from './milled';
 import { drawTurned } from './turned';
 
@@ -102,6 +106,50 @@ describe.each(MACHINE_KINDS)('machine %s', (kind) => {
       expect(toDesignShape(drawMachine(kind, k))).toEqual(machineFixtures[kind][String(k)]);
     }
   });
+});
+
+it('draws the location map exactly like the design engine at every scale', () => {
+  const mapFixtures = fixtures.map as Record<string, DesignDrawing>;
+  for (const k of fixtures.k) expect(toDesignShape(drawMap(k))).toEqual(mapFixtures[String(k)]);
+});
+
+it('lays out the parts floor with the design items', () => {
+  const [kind, viewBox, items] = [fixtures.batchMix.kind, fixtures.batchMix.vb, fixtures.batchMix.items];
+  expect({ kind, viewBox, items }).toEqual({
+    kind: 'r17',
+    viewBox: [...PARTS_FLOOR.viewBox],
+    items: PARTS_FLOOR.items.map((i) => [i.view, i.x, i.y, i.rotation, i.kind]),
+  });
+});
+
+it('places each floor item with the design transform', () => {
+  // Expected strings were computed with the design engine's own formula (sugo-drawings.js, SugoBatch.draw).
+  expect(floorPlacements(1).map((p) => p.transform)).toEqual([
+    'translate(46 58) rotate(0) translate(-71 0)',
+    'translate(152 48) rotate(-8) translate(-35 0)',
+    'translate(252 74) rotate(22) translate(-22 0)',
+    'translate(346 56) rotate(0) translate(-62 0)',
+    'translate(474 52) rotate(0) translate(-47 0)',
+    'translate(62 146) rotate(8) translate(-40 -70)',
+    'translate(202 160) rotate(-6) translate(-65 0)',
+    'translate(306 150) rotate(0) translate(-47 0)',
+    'translate(392 146) rotate(-58) translate(-27.5 0)',
+    'translate(486 148) rotate(-10) translate(-20 -78.8)',
+  ]);
+});
+
+const SUBJECTS: DrawingSubject[] = [
+  { type: 'part', kind: 'flange', views: 'full' },
+  { type: 'part', kind: 'r01', views: 'front' },
+  { type: 'machine', kind: 'm4' },
+  { type: 'map' },
+];
+
+it.each(SUBJECTS)('knows the view box of %o without drawing it, at any scale', (subject) => {
+  expect([drawSubject(subject, 0.5).viewBox, drawSubject(subject, 3).viewBox]).toEqual([
+    viewBoxOf(subject),
+    viewBoxOf(subject),
+  ]);
 });
 
 it('covers every part the design engine was sampled for', () => {
