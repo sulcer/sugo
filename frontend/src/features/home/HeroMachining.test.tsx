@@ -24,6 +24,9 @@ vi.mock('@/three/load-hero', () => ({
 const OPERATIONS = ['Čelo', 'Grobo', 'Fino', 'Navoj', 'Vrtanje', 'Odrez'];
 let reducedMotion = false;
 let motionChanged = () => {};
+let resizeObservers = new Set<() => void>();
+/** Tells every observer the elements changed size (their new size comes from `width`). */
+const resize = () => act(() => resizeObservers.forEach((callback) => callback()));
 let width = 700;
 
 beforeEach(() => {
@@ -40,11 +43,17 @@ beforeEach(() => {
   three.runMachining.mockReset().mockReturnValue(new Promise(() => {}));
   three.startSpin.mockReset().mockReturnValue(() => {});
   three.dispose.mockReset();
+  resizeObservers = new Set();
   vi.stubGlobal(
     'ResizeObserver',
     class {
-      observe() {}
-      disconnect() {}
+      constructor(private readonly callback: () => void) {}
+      observe() {
+        resizeObservers.add(this.callback);
+      }
+      disconnect() {
+        resizeObservers.delete(this.callback);
+      }
     },
   );
   vi.stubGlobal('matchMedia', (query: string) => ({
@@ -181,4 +190,31 @@ it('hides the readout when the visitor turns motion off mid-run', async () => {
 it('is decorative for assistive tech', async () => {
   const { container } = await renderHero();
   expect(container.firstElementChild).toHaveAttribute('aria-hidden', 'true');
+});
+
+it('leaves the half-section to the stylesheet when motion is turned off mid-run', async () => {
+  const { container } = await startMachining();
+  reducedMotion = true;
+  act(() => motionChanged());
+  await settle();
+  expect((container.querySelector('[data-view="a"]') as SVGGElement).style.opacity).toBe('');
+});
+
+it('ticks off every operation when motion is turned off mid-run', async () => {
+  const { container } = await startMachining();
+  reducedMotion = true;
+  act(() => motionChanged());
+  await settle();
+  expect([...container.querySelectorAll('[data-op]')].map((cell) => cell.getAttribute('data-op'))).toEqual(
+    Array(6).fill('done'),
+  );
+});
+
+it('stops machining when the hero narrows past 460 px, even without a redraw', async () => {
+  width = 480;
+  await startMachining();
+  width = 450;
+  resize();
+  await settle();
+  expect(three.dispose).toHaveBeenCalled();
 });

@@ -7,6 +7,7 @@ import { drawSubject, viewBoxOf, type Drawing } from '@/drawing/geometry';
 import { useDrawingScale } from '@/drawing/use-drawing-scale';
 import { cn } from '@/lib/cn';
 import { prefersReducedMotion, usePrefersReducedMotion } from '@/lib/use-prefers-reduced-motion';
+import { useWidthBelow } from '@/lib/use-width-below';
 import { wait } from '@/lib/wait';
 import { loadHeroThree } from '@/three/load-hero';
 import type { ToolOverlayHandle } from '@/three/machining/simulate';
@@ -51,6 +52,8 @@ export function HeroMachining({ operations, nominalWidth = 690 }: HeroMachiningP
   const readoutZRef = useRef<HTMLSpanElement>(null);
 
   const reducedMotion = usePrefersReducedMotion();
+  // Crossing 460 px swaps machining for the still even when the drawing keeps its scale.
+  const narrow = useWidthBelow(rootRef, STATIC_BELOW_PX);
   const [gated, setGated] = useState(true);
   const [operation, setOperation] = useState(operations.length);
   const [readoutVisible, setReadoutVisible] = useState(false);
@@ -120,9 +123,10 @@ export function HeroMachining({ operations, nominalWidth = 690 }: HeroMachiningP
       controller.abort();
       cleanups.reverse().forEach((cleanup) => cleanup());
       resetStage(context);
+      setOperation(finished);
       setReadoutVisible(false);
     };
-  }, [drawing, reducedMotion, finished]);
+  }, [drawing, reducedMotion, narrow, finished]);
 
   return (
     <div
@@ -263,8 +267,9 @@ function resetStage({ svg, toolGroup, overlay }: SequenceContext) {
     tool.style.removeProperty('display');
     tool.removeAttribute('transform');
   });
+  // Back to the stylesheet, which shows the half-section or, for the still, hides it.
+  svg.querySelector<SVGGElement>('[data-view="a"]')?.style.removeProperty('opacity');
   const hatch = mainHatch(svg);
   hatch?.style.removeProperty('opacity');
   hatch?.style.removeProperty('transition');
-  showFrame(svg, 1);
 }
