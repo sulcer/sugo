@@ -24,9 +24,14 @@ test('dimensions the fifth machine over its three travels', async ({ page }) => 
   await expect(machine.locator('dl > div')).toHaveText(['X500mm', 'Y350mm', 'Z250mm']);
 });
 
-test('is titled in german on the german sheet', async ({ page }) => {
+test('is headed in german on the german sheet', async ({ page }) => {
   await page.goto('/de/strojni-park');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Maschinenpark');
+});
+
+test('is titled in german on the german sheet', async ({ page }) => {
+  await page.goto('/de/strojni-park');
+  await expect(page).toHaveTitle('Maschinenpark · SUGO d.o.o.');
 });
 
 test('plots the work envelope of a hovered machine', async ({ page, isMobile }) => {
