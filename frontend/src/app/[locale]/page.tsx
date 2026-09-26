@@ -1,12 +1,21 @@
 import { SheetMain } from '@/components/SheetMain';
-import { SheetSection } from '@/components/SheetSection';
+import { About } from '@/features/home/About';
+import { Capabilities } from '@/features/home/Capabilities';
+import { Hero } from '@/features/home/Hero';
+import { Production } from '@/features/home/Production';
+import { Services } from '@/features/home/Services';
+import { isLocale } from '@/i18n/locales';
 
-export default function HomePage() {
+export default async function HomePage({ params }: PageProps<'/[locale]'>) {
+  const { locale } = await params;
+  if (!isLocale(locale)) return null;
   return (
     <SheetMain>
-      <SheetSection number="01" divider={false} grid>
-        <h1 className="m-0 px-4 py-16 text-display font-medium">SUGO d.o.o.</h1>
-      </SheetSection>
+      <Hero locale={locale} />
+      <Services locale={locale} />
+      <Capabilities locale={locale} />
+      <About locale={locale} />
+      <Production locale={locale} />
     </SheetMain>
   );
 }

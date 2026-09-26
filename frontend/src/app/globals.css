@@ -37,10 +37,10 @@
 
   --spacing-gutter: clamp(16px, 3cqw, 40px);
 
-  /* container sizes: max-w-sheet, and the @nav / @timeline / @rail container variants */
+  /* container sizes: max-w-sheet, and the @nav / @wide / @rail container variants */
   --container-sheet: 1280px;
   --container-nav: 900px;
-  --container-timeline: 700px;
+  --container-wide: 700px;
   --container-rail: 640px;
 }
 
@@ -131,4 +131,27 @@
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--color-grey);
+}
+
+/* The one filled button: a link on the home hero, the submit of the inquiry form. */
+@utility button-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  height: 52px;
+  padding: 0 26px;
+  background: var(--color-accent);
+  color: var(--color-panel);
+  font-size: 16px;
+  font-weight: 500;
+  text-decoration-line: none;
+
+  &:hover {
+    background: var(--color-accent-hover);
+    color: var(--color-panel);
+  }
+
+  &:active {
+    background: var(--color-accent-active);
+  }
 }
