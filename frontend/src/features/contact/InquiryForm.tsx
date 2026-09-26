@@ -6,6 +6,7 @@ import type { InquiryState } from '@/features/inquiry/handle-inquiry';
 import { checkFiles, INQUIRY_LIMITS, type FileProblem } from '@/features/inquiry/limits';
 import type { Locale } from '@/i18n/locales';
 import { cn } from '@/lib/cn';
+import { useHydrated } from '@/lib/use-hydrated';
 import { DropZone } from './DropZone';
 import { FileList } from './FileList';
 
@@ -78,9 +79,19 @@ function Inquiry({
   onAgain,
 }: InquiryFormProps & { restarted: boolean; onAgain: () => void }) {
   const copy = INQUIRY[locale];
-  // A dropped connection or a deployment between load and submit rejects the action. Nothing above
-  // this form catches that, so the page would die and take the visitor's message with it.
+  const startedAt = useRef(0);
   const deliver = async (previous: InquiryState, form: FormData): Promise<InquiryState> => {
+    // The server drops anything sent faster than a person fills the form. A visitor who autofills and
+    // sends at once is a person: hold the inquiry for the rest of that time instead of losing it.
+    // Measured again after each wait: coarse clocks and early timers can leave it a hair short.
+    let elapsed = performance.now() - startedAt.current;
+    while (elapsed < INQUIRY_LIMITS.minFillMs) {
+      await new Promise((resolve) => setTimeout(resolve, INQUIRY_LIMITS.minFillMs - elapsed + 20));
+      elapsed = performance.now() - startedAt.current;
+    }
+    form.set('elapsedMs', String(Math.ceil(elapsed)));
+    // A dropped connection or a deployment between load and submit rejects the action. Nothing above
+    // this form catches that, so the page would die and take the visitor's message with it.
     try {
       return await action(previous, form);
     } catch {
@@ -93,7 +104,7 @@ function Inquiry({
   const [email, setEmail] = useState('');
   const [consent, setConsent] = useState(false);
   const [tried, setTried] = useState(false);
-  const startedAt = useRef(0);
+  const hydrated = useHydrated();
   const emailField = useRef<HTMLInputElement>(null);
   const consentBox = useRef<HTMLInputElement>(null);
   const dropZone = useRef<HTMLInputElement>(null);
@@ -133,7 +144,6 @@ function Inquiry({
     if (addressMissing || !consent || problem) return;
     const data = new FormData(event.currentTarget);
     data.set('locale', locale);
-    data.set('elapsedMs', String(performance.now() - startedAt.current));
     for (const file of files) data.append('files', file);
     startTransition(() => submit(data));
   };
@@ -257,9 +267,10 @@ function Inquiry({
         )}
         <button
           type="submit"
-          disabled={pending}
+          // The action only runs with scripts; until then a click would post the message into the void.
+          disabled={pending || !hydrated}
           aria-busy={pending}
-          className="inline-flex h-13 cursor-pointer items-center gap-3 self-start bg-accent px-6.5 text-[16px] font-medium text-panel hover:bg-accent-hover active:bg-accent-active"
+          className="button-primary cursor-pointer self-start"
         >
           {pending ? copy.sending : copy.send}{' '}
           <span aria-hidden="true" className="font-mono">

@@ -45,10 +45,9 @@ test('thanks the visitor for an inquiry with a drawing', async ({ page }) => {
     .filter({ has: page.getByRole('checkbox') })
     .click();
   await expect(page.getByRole('checkbox')).toBeChecked();
-  // The spam guard drops anything filled in under three seconds.
-  await page.waitForTimeout(3200);
+  // Sent at once: the form holds it until the spam guard's three seconds have passed.
   await page.getByRole('button', { name: 'Pošlji' }).click();
-  await expect(page.getByText('Hvala. Povpraševanje je poslano.')).toBeVisible();
+  await expect(page.getByText('Hvala. Povpraševanje je poslano.')).toBeVisible({ timeout: 10_000 });
 });
 
 test('refuses an executable that calls itself a drawing', async ({ page }) => {
@@ -60,9 +59,8 @@ test('refuses an executable that calls itself a drawing', async ({ page }) => {
     .locator('label')
     .filter({ has: page.getByRole('checkbox') })
     .click();
-  await page.waitForTimeout(3200);
   await page.getByRole('button', { name: 'Pošlji' }).click();
-  await expect(page.getByText('! Podprte so datoteke PDF, STEP in DXF.')).toBeVisible();
+  await expect(page.getByText('! Podprte so datoteke PDF, STEP in DXF.')).toBeVisible({ timeout: 10_000 });
 });
 
 test('lands the drawing zone below the sticky header', async ({ page }) => {

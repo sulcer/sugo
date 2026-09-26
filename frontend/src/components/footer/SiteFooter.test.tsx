@@ -46,3 +46,11 @@ it('always shows the current year in the copyright', () => {
   renderFooter();
   expect(screen.getByRole('contentinfo')).toHaveTextContent('© 2031 SUGO d.o.o.');
 });
+
+it('lets a visitor who accepted analytics take it back', async () => {
+  const { readConsent, writeConsent } = await import('@/components/consent/consent-store');
+  writeConsent('yes');
+  renderFooter('en');
+  screen.getByRole('button', { name: 'Cookie settings' }).click();
+  expect(readConsent()).toBeNull();
+});

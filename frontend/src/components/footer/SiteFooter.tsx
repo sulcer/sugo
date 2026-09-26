@@ -3,8 +3,12 @@ import { COMPANY } from '@/content/company';
 import { FOOTER } from '@/content/shell';
 import type { Locale } from '@/i18n/locales';
 import { localePath } from '@/i18n/routes';
+import { cn } from '@/lib/cn';
+import { CookieSettings } from '../consent/CookieSettings';
 import { Logo } from '../Logo';
 import { CurrentYear } from './CurrentYear';
+
+const FOOTER_LINK = '-my-3 inline-flex min-h-10 items-center text-ink underline-offset-3 hover:text-accent';
 
 const cell = 'flex flex-col bg-paper';
 const contactLink = 'inline-flex min-h-8 items-center text-ink no-underline hover:text-accent';
@@ -57,12 +61,12 @@ export function SiteFooter({ locale }: { locale: Locale }) {
           <span>
             © <CurrentYear buildYear={new Date().getFullYear()} /> {COMPANY.name} {copy.rights}
           </span>
-          <Link
-            href={localePath(locale, 'privacy')}
-            className="-my-3 inline-flex min-h-10 items-center text-ink underline-offset-3 hover:text-accent"
-          >
-            {copy.privacy}
-          </Link>
+          <span className="flex flex-wrap gap-x-6">
+            <Link href={localePath(locale, 'privacy')} className={FOOTER_LINK}>
+              {copy.privacy}
+            </Link>
+            <CookieSettings label={copy.cookies} className={cn(FOOTER_LINK, 'cursor-pointer underline')} />
+          </span>
         </div>
       </div>
     </footer>

@@ -5,6 +5,12 @@ import { INQUIRY } from '@/content/inquiry';
 import type { InquiryState } from '@/features/inquiry/handle-inquiry';
 import { InquiryForm } from './InquiryForm';
 
+// These tests are about the form, not the spam guard's minimum fill time (InquiryForm.timing.test).
+vi.mock('@/features/inquiry/limits', async (importOriginal) => {
+  const limits = await importOriginal<typeof import('@/features/inquiry/limits')>();
+  return { ...limits, INQUIRY_LIMITS: { ...limits.INQUIRY_LIMITS, minFillMs: 0 } };
+});
+
 const copy = INQUIRY.sl;
 const drawing = (name: string) => new File(['%PDF-1.7'], name, { lastModified: 1 });
 
@@ -214,4 +220,12 @@ describe('InquiryForm', () => {
       files: ['risba.pdf'],
     });
   });
+});
+
+it('keeps the send button off until the form can really send', async () => {
+  const { renderToString } = await import('react-dom/server');
+  const html = renderToString(
+    <InquiryForm locale="sl" privacyHref="/varovanje-osebnih-podatkov" action={vi.fn()} />,
+  );
+  expect(html).toMatch(/<button type="submit"[^>]* disabled=""/);
 });

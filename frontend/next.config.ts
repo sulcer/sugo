@@ -19,6 +19,8 @@ const nextConfig: NextConfig = {
     // learned /[locale] from /de and /en, the router would predict /kontakt to be a locale and
     // prefetch a page that does not exist; asking the server for each route tree avoids that.
     optimisticRouting: false,
+    // Unknown URLs the proxy skips (with a dot) render app/global-not-found.tsx, not Next's bare 404.
+    globalNotFound: true,
   },
   async headers() {
     return [{ source: '/:path*', headers: securityHeaders }];

@@ -1,4 +1,9 @@
+import { INQUIRY_LIMITS } from '@/features/inquiry/limits';
 import type { Localized } from '@/i18n/locales';
+import { COMPANY } from './company';
+
+const MAX_MB = INQUIRY_LIMITS.maxTotalBytes / (1024 * 1024);
+const PHONE = COMPANY.phones[0].display;
 
 export const INQUIRY: Localized<{
   drop: string;
@@ -52,10 +57,10 @@ export const INQUIRY: Localized<{
       consent: 'Potrdite izjavo o varovanju podatkov.',
       invalid: 'Preverite vnose in poskusite znova.',
       fileType: 'Podprte so datoteke PDF, STEP in DXF.',
-      tooMany: 'Priložite največ 5 datotek.',
-      tooLarge: 'Datoteke skupaj presegajo 4 MB — pošljite jih na cncgolob@gmail.com.',
-      rateLimited: 'Preveč poskusov. Poskusite čez nekaj minut ali pišite na cncgolob@gmail.com.',
-      sendFailed: 'Pošiljanje ni uspelo. Pišite na cncgolob@gmail.com ali pokličite +386 31 876 138.',
+      tooMany: `Priložite največ ${INQUIRY_LIMITS.maxFiles} datotek.`,
+      tooLarge: `Datoteke skupaj presegajo ${MAX_MB} MB — pošljite jih na ${COMPANY.email}.`,
+      rateLimited: `Preveč poskusov. Poskusite čez nekaj minut ali pišite na ${COMPANY.email}.`,
+      sendFailed: `Pošiljanje ni uspelo. Pišite na ${COMPANY.email} ali pokličite ${PHONE}.`,
     },
   },
   de: {
@@ -81,12 +86,10 @@ export const INQUIRY: Localized<{
       consent: 'Bitte Datenschutzerklärung bestätigen.',
       invalid: 'Bitte prüfen Sie Ihre Eingaben und versuchen Sie es erneut.',
       fileType: 'Unterstützt werden PDF-, STEP- und DXF-Dateien.',
-      tooMany: 'Bitte höchstens 5 Dateien anhängen.',
-      tooLarge: 'Die Dateien überschreiten zusammen 4 MB — senden Sie sie an cncgolob@gmail.com.',
-      rateLimited:
-        'Zu viele Versuche. Versuchen Sie es in einigen Minuten erneut oder schreiben Sie an cncgolob@gmail.com.',
-      sendFailed:
-        'Senden fehlgeschlagen. Schreiben Sie an cncgolob@gmail.com oder rufen Sie +386 31 876 138 an.',
+      tooMany: `Bitte höchstens ${INQUIRY_LIMITS.maxFiles} Dateien anhängen.`,
+      tooLarge: `Die Dateien überschreiten zusammen ${MAX_MB} MB — senden Sie sie an ${COMPANY.email}.`,
+      rateLimited: `Zu viele Versuche. Versuchen Sie es in einigen Minuten erneut oder schreiben Sie an ${COMPANY.email}.`,
+      sendFailed: `Senden fehlgeschlagen. Schreiben Sie an ${COMPANY.email} oder rufen Sie ${PHONE} an.`,
     },
   },
   en: {
@@ -112,10 +115,10 @@ export const INQUIRY: Localized<{
       consent: 'Please confirm the privacy policy.',
       invalid: 'Please check your entries and try again.',
       fileType: 'PDF, STEP and DXF files are supported.',
-      tooMany: 'Please attach at most 5 files.',
-      tooLarge: 'The files exceed 4 MB in total — send them to cncgolob@gmail.com.',
-      rateLimited: 'Too many attempts. Try again in a few minutes or write to cncgolob@gmail.com.',
-      sendFailed: 'Sending failed. Write to cncgolob@gmail.com or call +386 31 876 138.',
+      tooMany: `Please attach at most ${INQUIRY_LIMITS.maxFiles} files.`,
+      tooLarge: `The files exceed ${MAX_MB} MB in total — send them to ${COMPANY.email}.`,
+      rateLimited: `Too many attempts. Try again in a few minutes or write to ${COMPANY.email}.`,
+      sendFailed: `Sending failed. Write to ${COMPANY.email} or call ${PHONE}.`,
     },
   },
 };

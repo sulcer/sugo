@@ -18,6 +18,7 @@ const PAGES = [
   '/de/varovanje-osebnih-podatkov',
   '/en/varovanje-osebnih-podatkov',
   '/ne-obstaja',
+  '/pregled.php',
 ];
 
 for (const path of PAGES) {

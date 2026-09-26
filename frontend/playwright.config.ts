@@ -24,6 +24,7 @@ export default defineConfig({
     reuseExistingServer: false,
     timeout: 240_000,
     // Inquiries must never leave the machine during a test run.
-    env: { MAIL_TRANSPORT: 'json' },
+    // A measurement id, so consent gating is exercised; e2e/consent.spec.ts stubs Google's script.
+    env: { MAIL_TRANSPORT: 'json', NEXT_PUBLIC_GOOGLE_ANALYTICS: 'G-E2ETEST' },
   },
 });
