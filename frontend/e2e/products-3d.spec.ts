@@ -6,7 +6,6 @@ test.skip(({ browserName }) => browserName !== 'chromium', 'the SwiftShader flag
 
 /** Sheets the header and footer link to that this branch has not built yet. */
 const NOT_YET_BUILT = [
-  '/kontakt', // remove when the contact page lands
   '/varovanje-osebnih-podatkov', // remove when the privacy page lands
 ];
 
