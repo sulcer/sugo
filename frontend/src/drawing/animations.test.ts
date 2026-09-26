@@ -120,6 +120,14 @@ describe('revealHatch', () => {
     expect(clipWidth(svg)).toBe('0');
   });
 
+  it('stays hidden when the first frame is timed before the sweep started', () => {
+    now = 10;
+    const svg = drawing();
+    revealHatch(svg, 500);
+    advanceTo(8);
+    expect(clipWidth(svg)).toBe('0');
+  });
+
   it('is half revealed half-way through', () => {
     const svg = drawing();
     revealHatch(svg, 500);
