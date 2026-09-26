@@ -30,6 +30,7 @@ const mono = IBM_Plex_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(COMPANY.url),
   title: { default: 'SUGO d.o.o.', template: '%s · SUGO d.o.o.' },
+  verification: { google: 'CXebyOWLWwNdOPbmKFNELNAifcrmyQqAxfGWviHy6mw' },
 };
 
 export const dynamicParams = false;

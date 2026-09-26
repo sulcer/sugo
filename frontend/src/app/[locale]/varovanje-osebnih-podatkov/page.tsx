@@ -1,16 +1,10 @@
-import type { Metadata } from 'next';
 import { SheetMain } from '@/components/SheetMain';
 import { SheetSection } from '@/components/SheetSection';
-import { PRIVACY } from '@/content/privacy';
-import { DEFAULT_LOCALE, isLocale } from '@/i18n/locales';
+import { isLocale } from '@/i18n/locales';
+import { metadataFor } from '@/i18n/metadata';
 import { PrivacyStatement } from '@/features/privacy/PrivacyStatement';
 
-export async function generateMetadata({
-  params,
-}: PageProps<'/[locale]/varovanje-osebnih-podatkov'>): Promise<Metadata> {
-  const { locale } = await params;
-  return { title: PRIVACY[isLocale(locale) ? locale : DEFAULT_LOCALE].title };
-}
+export const generateMetadata = metadataFor('privacy');
 
 export default async function PrivacyPage({ params }: PageProps<'/[locale]/varovanje-osebnih-podatkov'>) {
   const { locale } = await params;
