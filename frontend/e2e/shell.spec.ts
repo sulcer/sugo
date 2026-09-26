@@ -59,3 +59,10 @@ test('shows the title-block footer with a live copyright year', async ({ page })
   await page.goto('/');
   await expect(page.getByRole('contentinfo')).toContainText(`© ${new Date().getFullYear()} SUGO d.o.o.`);
 });
+
+test('switches the sheet to another language on every device', async ({ page }) => {
+  await page.goto('/kontakt');
+  await page.getByRole('group', { name: 'Jezik' }).getByRole('link', { name: 'English' }).click();
+  await expect(page).toHaveURL(/\/en\/kontakt$/);
+  await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+});
