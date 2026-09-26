@@ -14,17 +14,20 @@ test('runs through the whole page without console errors', async ({ page }) => {
 
 test('restarts the hero machining cleanly after a resize', async ({ page, isMobile }) => {
   test.skip(isMobile, 'resizes a desktop window');
+  // Software WebGL on a shared CI runner renders a frame every few seconds; give the restart room.
+  test.slow();
+  const patience = { timeout: 30_000 };
   const errors = collectErrors(page);
   await page.goto('/');
   const hero = page.locator('main > section').first();
   const operation = (state: 'pending' | 'active' | 'done') => hero.locator(`[data-op="${state}"]`);
   // The server sends the strip finished; only a running 3D turn has an active operation and a canvas.
-  await expect(operation('active')).toHaveCount(1, { timeout: 15_000 });
+  await expect(operation('active')).toHaveCount(1, patience);
   await expect(hero.locator('canvas')).toHaveCount(1);
   // A 24 % narrower hero: past the drawing's 12 % remeasure tolerance, still wide enough to machine.
   await page.setViewportSize({ width: 520, height: 900 });
-  await expect(operation('pending')).toHaveCount(6);
-  await expect(operation('active')).toHaveCount(1, { timeout: 15_000 });
+  await expect(operation('pending')).toHaveCount(6, patience);
+  await expect(operation('active')).toHaveCount(1, patience);
   expect([errors, await hero.locator('canvas').count()]).toEqual([[], 1]);
 });
 
