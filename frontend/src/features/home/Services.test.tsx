@@ -10,3 +10,8 @@ it('lists the three services as headed entries', () => {
     'Consulting',
   ]);
 });
+
+it('keeps its list semantics in Safari, which drops them for unstyled lists', () => {
+  render(<Services locale="en" />);
+  expect(screen.getByRole('list')).toHaveAttribute('role', 'list');
+});

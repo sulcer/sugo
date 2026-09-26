@@ -105,3 +105,8 @@ it('gives assistive tech the final figures with their labels, even mid-count', (
     '1500+ projects',
   ]);
 });
+
+it('keeps its list semantics in Safari, which drops them for unstyled lists', () => {
+  render(<Counters locale="en" buildYear={2026} />);
+  expect(screen.getByRole('list')).toHaveAttribute('role', 'list');
+});

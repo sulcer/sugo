@@ -71,6 +71,7 @@ export function Counters({ locale, buildYear }: CountersProps) {
   return (
     <ul
       ref={rootRef}
+      role="list"
       className="box-border grid w-[min(560px,100%)] grid-cols-3 gap-px border-[1.5px] border-ink bg-ink/30"
     >
       {counters.map(({ value, suffix, label }) => (

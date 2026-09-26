@@ -11,3 +11,8 @@ it('lists the company history in order, each event with its year', () => {
     '2022Machine park modernised',
   ]);
 });
+
+it('keeps its list semantics in Safari, which drops them for unstyled lists', () => {
+  render(<TimelineList locale="en" />);
+  expect(screen.getByRole('list')).toHaveAttribute('role', 'list');
+});
