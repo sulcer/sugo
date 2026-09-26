@@ -58,6 +58,31 @@ describe('InquiryForm', () => {
     expect(screen.queryByText('a.exe')).not.toBeInTheDocument();
   });
 
+  it('sends an inquiry whose refused file was replaced by a drawing', async () => {
+    const user = renderForm();
+    fireEvent.drop(dropZone(), { dataTransfer: { files: [new File(['MZ'], 'a.exe')] } });
+    await user.upload(filePicker(), drawing('risba.pdf'));
+    await fillAndSend(user);
+    expect(action).toHaveBeenCalledTimes(1);
+  });
+
+  it('forgets a refusal once the offending list is emptied', async () => {
+    const user = renderForm();
+    await user.upload(filePicker(), drawing('risba.pdf'));
+    fireEvent.drop(dropZone(), { dataTransfer: { files: [new File(['MZ'], 'a.exe')] } });
+    await user.click(screen.getByRole('button', { name: `${copy.remove} risba.pdf` }));
+    expect(errorLines()).toEqual([]);
+  });
+
+  it('sends an inquiry after a refusal that a removal undid', async () => {
+    const user = renderForm();
+    await user.upload(filePicker(), drawing('risba.pdf'));
+    fireEvent.drop(dropZone(), { dataTransfer: { files: [new File(['MZ'], 'a.exe')] } });
+    await user.click(screen.getByRole('button', { name: `${copy.remove} risba.pdf` }));
+    await fillAndSend(user);
+    expect(action).toHaveBeenCalledTimes(1);
+  });
+
   it('lists the same drawing once when it is attached twice', async () => {
     const user = renderForm();
     await user.upload(filePicker(), drawing('risba.pdf'));

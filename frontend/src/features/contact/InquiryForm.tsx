@@ -70,7 +70,10 @@ function Inquiry({ locale, privacyHref, action, onAgain }: InquiryFormProps & { 
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setTried(true);
-    if (!LOOKS_LIKE_EMAIL.test(email) || !consent || fileProblem) return;
+    // The list decides, not the last refusal: a rejected drop must not block the form for good.
+    const problem = checkFiles(files);
+    setFileProblem(problem);
+    if (!LOOKS_LIKE_EMAIL.test(email) || !consent || problem) return;
     const data = new FormData(event.currentTarget);
     data.set('locale', locale);
     data.set('elapsedMs', String(performance.now() - startedAt.current));
@@ -117,7 +120,10 @@ function Inquiry({ locale, privacyHref, action, onAgain }: InquiryFormProps & { 
       <FileList
         files={files}
         removeLabel={copy.remove}
-        onRemove={(file) => setFiles(files.filter((listed) => listed !== file))}
+        onRemove={(file) => {
+          setFiles(files.filter((listed) => listed !== file));
+          setFileProblem(null);
+        }}
       />
 
       <div className="flex flex-wrap gap-5">
