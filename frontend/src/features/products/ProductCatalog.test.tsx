@@ -1,6 +1,9 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
+import { PRODUCTS } from '@/content/products';
+import type { Locale } from '@/i18n/locales';
+import { catalogParts } from './catalog-parts';
 import { ProductCatalog } from './ProductCatalog';
 
 vi.mock('@/three/model-scene', () => ({
@@ -36,29 +39,32 @@ afterEach(() => vi.unstubAllGlobals());
 const captionOf = (name: string) =>
   screen.getByRole('button', { name }).closest('li')?.querySelector('[data-caption]')?.textContent;
 
+const renderCatalog = (locale: Locale) =>
+  render(<ProductCatalog copy={PRODUCTS[locale]} parts={catalogParts(locale)} />);
+
 const captions = () =>
   screen.getAllByRole('listitem').map((card) => card.querySelector('[data-caption]')?.textContent);
 
 it('shows the whole catalogue before anything is filtered', () => {
-  render(<ProductCatalog locale="sl" />);
+  renderCatalog('sl');
   expect(screen.getAllByRole('listitem')).toHaveLength(20);
 });
 
 it('counts the parts of every process on its chip', () => {
-  render(<ProductCatalog locale="sl" />);
+  renderCatalog('sl');
   expect(screen.getByRole('group', { name: 'Postopek' }).textContent).toBe(
     'Vse 20Struženje 13Rezkanje 6Plastika 1',
   );
 });
 
 it('shows only the milled parts when milling is chosen', async () => {
-  render(<ProductCatalog locale="sl" />);
+  renderCatalog('sl');
   await userEvent.click(screen.getByRole('button', { name: /Rezkanje/ }));
   expect(screen.getAllByRole('listitem')).toHaveLength(6);
 });
 
 it('marks the chosen process chip as the pressed one', async () => {
-  render(<ProductCatalog locale="sl" />);
+  renderCatalog('sl');
   await userEvent.click(screen.getByRole('button', { name: /Rezkanje/ }));
   expect(
     screen.getByRole('group', { name: 'Postopek' }).querySelectorAll('[aria-pressed="true"]')[0]?.textContent,
@@ -66,13 +72,13 @@ it('marks the chosen process chip as the pressed one', async () => {
 });
 
 it('announces how many parts of the catalogue are shown', async () => {
-  render(<ProductCatalog locale="sl" />);
+  renderCatalog('sl');
   await userEvent.click(screen.getByRole('button', { name: /Rezkanje/ }));
   expect(screen.getByText('6 / 20 prikazanih delov')).toHaveAttribute('aria-live', 'polite');
 });
 
 it('offers only the materials the parts are actually made of', () => {
-  render(<ProductCatalog locale="sl" />);
+  renderCatalog('sl');
   expect(
     [...screen.getByLabelText('Material').querySelectorAll('option')].map((option) => [
       option.value,
@@ -86,14 +92,14 @@ it('offers only the materials the parts are actually made of', () => {
 });
 
 it('offers a way back when no part matches both filters', async () => {
-  render(<ProductCatalog locale="sl" />);
+  renderCatalog('sl');
   await userEvent.click(screen.getByRole('button', { name: /Rezkanje/ }));
   await userEvent.selectOptions(screen.getByLabelText('Material'), 'PVC');
   expect(screen.queryAllByRole('listitem')).toEqual([]);
 });
 
 it('restores the whole catalogue when the filters are reset', async () => {
-  render(<ProductCatalog locale="sl" />);
+  renderCatalog('sl');
   await userEvent.click(screen.getByRole('button', { name: /Rezkanje/ }));
   await userEvent.selectOptions(screen.getByLabelText('Material'), 'PVC');
   await userEvent.click(screen.getByRole('button', { name: 'Ponastavi filtre' }));
@@ -101,7 +107,7 @@ it('restores the whole catalogue when the filters are reset', async () => {
 });
 
 it('moves focus to the process chips after a reset, so the empty state is not a dead end', async () => {
-  render(<ProductCatalog locale="sl" />);
+  renderCatalog('sl');
   await userEvent.click(screen.getByRole('button', { name: /Rezkanje/ }));
   await userEvent.selectOptions(screen.getByLabelText('Material'), 'PVC');
   await userEvent.click(screen.getByRole('button', { name: 'Ponastavi filtre' }));
@@ -109,17 +115,17 @@ it('moves focus to the process chips after a reset, so the empty state is not a 
 });
 
 it('captions a part with its number, name, process and confirmed material', () => {
-  render(<ProductCatalog locale="sl" />);
+  renderCatalog('sl');
   expect(captionOf('Medeninasta matica')).toBe('20Medeninasta maticastruženje · medenina');
 });
 
 it('leaves an unconfirmed material out of the caption instead of a placeholder', () => {
-  render(<ProductCatalog locale="sl" />);
+  renderCatalog('sl');
   expect(captionOf('Nosilna plošča z žepi')).toBe('01Nosilna plošča z žepirezkanje');
 });
 
 it('keeps the catalogue numbers of the parts while a filter is on', async () => {
-  render(<ProductCatalog locale="de" />);
+  renderCatalog('de');
   await userEvent.click(screen.getByRole('button', { name: /Fräsen/ }));
   expect(captions().map((caption) => caption?.slice(0, 2))).toEqual(['01', '02', '07', '13', '14', '15']);
 });

@@ -1,13 +1,12 @@
 import { useId, type RefObject } from 'react';
-import { PARTS, type Process } from '@/content/parts';
-import type { PRODUCTS } from '@/content/products';
-import type { Locale } from '@/i18n/locales';
-import { processCounts } from './filter-parts';
+import type { Process } from '@/content/parts';
+import type { ProductsCopy } from '@/content/products';
 
 const OPTIONS = ['all', 'turning', 'milling', 'plastic'] as const;
 
 type ProcessFilterProps = {
-  copy: (typeof PRODUCTS)[Locale];
+  copy: ProductsCopy;
+  counts: Record<Process | 'all', number>;
   value: Process | 'all';
   onChange: (value: Process | 'all') => void;
   /** The empty state hands focus back to the first chip after a reset. */
@@ -15,9 +14,8 @@ type ProcessFilterProps = {
 };
 
 /** One chip per machining process, each with the number of parts behind it. */
-export function ProcessFilter({ copy, value, onChange, allRef }: ProcessFilterProps) {
+export function ProcessFilter({ copy, counts, value, onChange, allRef }: ProcessFilterProps) {
   const labelId = useId();
-  const counts = processCounts(PARTS);
 
   return (
     <div className="flex flex-col gap-2.5">

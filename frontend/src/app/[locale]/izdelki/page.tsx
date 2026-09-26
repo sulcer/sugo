@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { SheetMain } from '@/components/SheetMain';
 import { SheetSection } from '@/components/SheetSection';
 import { PRODUCTS } from '@/content/products';
+import { catalogParts } from '@/features/products/catalog-parts';
 import { ProductCatalog } from '@/features/products/ProductCatalog';
 import { isLocale } from '@/i18n/locales';
 
@@ -25,7 +26,7 @@ export default async function ProductsPage({ params }: PageProps<'/[locale]/izde
       </SheetSection>
       <SheetSection number="02">
         <div className="flex min-w-0 flex-[1_1_600px] flex-col gap-6 pt-[clamp(8px,2.2cqw,24px)] pr-gutter pb-[clamp(48px,5cqw,72px)] pl-4">
-          <ProductCatalog locale={locale} />
+          <ProductCatalog copy={copy} parts={catalogParts(locale)} />
         </div>
       </SheetSection>
     </SheetMain>

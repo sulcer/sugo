@@ -5,7 +5,7 @@ import type { Localized } from '@/i18n/locales';
  * Copy of the Izdelki sheet. Process names stay lower case: they read as captions under the parts
  * and the filter chips capitalize their first letter.
  */
-export const PRODUCTS: Localized<{
+export type ProductsCopy = {
   title: string;
   lead: string;
   processLabel: string;
@@ -18,7 +18,9 @@ export const PRODUCTS: Localized<{
   footnote: string;
   process: Record<Process, string>;
   material: Record<Material, string>;
-}> = {
+};
+
+export const PRODUCTS: Localized<ProductsCopy> = {
   sl: {
     title: 'Izdelki',
     lead: 'Deli, izdelani pri SUGO po risbah naših strank. Vsak del si lahko ogledate kot risbo ali 3D model.',
