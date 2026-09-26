@@ -1,15 +1,12 @@
-import type { Metadata } from 'next';
 import { SheetMain } from '@/components/SheetMain';
 import { SheetSection } from '@/components/SheetSection';
 import { PRODUCTS } from '@/content/products';
 import { catalogParts } from '@/features/products/catalog-parts';
 import { ProductCatalog } from '@/features/products/ProductCatalog';
-import { DEFAULT_LOCALE, isLocale } from '@/i18n/locales';
+import { isLocale } from '@/i18n/locales';
+import { metadataFor } from '@/i18n/metadata';
 
-export async function generateMetadata({ params }: PageProps<'/[locale]/izdelki'>): Promise<Metadata> {
-  const { locale } = await params;
-  return { title: PRODUCTS[isLocale(locale) ? locale : DEFAULT_LOCALE].title };
-}
+export const generateMetadata = metadataFor('products');
 
 export default async function ProductsPage({ params }: PageProps<'/[locale]/izdelki'>) {
   const { locale } = await params;
