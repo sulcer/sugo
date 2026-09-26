@@ -6,7 +6,9 @@ import * as home from './home';
 import * as inquiry from './inquiry';
 import * as machinePark from './machine-park';
 import * as machines from './machines';
+import * as privacy from './privacy';
 import * as products from './products';
+import * as seo from './seo';
 import * as shell from './shell';
 
 /** Every `Localized` export, i.e. every object keyed by all three locales. */
@@ -17,7 +19,9 @@ const localizedExports = Object.entries({
   ...inquiry,
   ...machinePark,
   ...machines,
+  ...privacy,
   ...products,
+  ...seo,
   ...shell,
 }).flatMap(([name, value]) => collectLocalized(name, value));
 

@@ -1,14 +1,11 @@
-import type { Metadata } from 'next';
 import { SheetMain } from '@/components/SheetMain';
 import { SheetSection } from '@/components/SheetSection';
 import { MACHINE_PARK } from '@/content/machine-park';
 import { MachineGroup } from '@/features/machine-park/MachineGroup';
-import { DEFAULT_LOCALE, isLocale } from '@/i18n/locales';
+import { isLocale } from '@/i18n/locales';
+import { metadataFor } from '@/i18n/metadata';
 
-export async function generateMetadata({ params }: PageProps<'/[locale]/strojni-park'>): Promise<Metadata> {
-  const { locale } = await params;
-  return { title: MACHINE_PARK[isLocale(locale) ? locale : DEFAULT_LOCALE].title };
-}
+export const generateMetadata = metadataFor('park');
 
 export default async function MachineParkPage({ params }: PageProps<'/[locale]/strojni-park'>) {
   const { locale } = await params;

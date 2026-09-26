@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { collectErrors } from './helpers';
 
 test('slovenian home is served at / without redirecting', async ({ page }) => {
   const response = await page.goto('/');
@@ -36,4 +37,16 @@ test('an unknown url answers 404 with the localized sheet in the server html', a
 test('an unknown slovenian url answers 404 with the slovenian sheet', async ({ request }) => {
   const response = await request.get('/ne-obstaja');
   expect([response.status(), (await response.text()).includes('<html lang="sl"')]).toEqual([404, true]);
+});
+
+test('prefetches the Slovenian sheets without asking for pages that do not exist', async ({ page }) => {
+  const errors = collectErrors(page);
+  // /de teaches the router the /[locale] pattern; the Slovenian sheets it then links to live at the
+  // root through the proxy rewrite, and must not be predicted as locales.
+  await page.goto('/de');
+  await page.waitForLoadState('networkidle');
+  await page.getByRole('link', { name: 'Slovenščina' }).click();
+  await expect(page).toHaveURL(/\/$/);
+  await page.waitForTimeout(1500);
+  expect(errors).toEqual([]);
 });

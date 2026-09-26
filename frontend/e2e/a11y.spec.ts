@@ -14,6 +14,9 @@ const PAGES = [
   '/kontakt',
   '/de/kontakt',
   '/en/kontakt',
+  '/varovanje-osebnih-podatkov',
+  '/de/varovanje-osebnih-podatkov',
+  '/en/varovanje-osebnih-podatkov',
   '/ne-obstaja',
 ];
 
