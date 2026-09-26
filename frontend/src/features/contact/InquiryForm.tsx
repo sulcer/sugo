@@ -78,9 +78,15 @@ function Inquiry({
   onAgain,
 }: InquiryFormProps & { restarted: boolean; onAgain: () => void }) {
   const copy = INQUIRY[locale];
-  // A dropped connection or a deployment between load and submit rejects the action. Nothing above
-  // this form catches that, so the page would die and take the visitor's message with it.
+  const startedAt = useRef(0);
   const deliver = async (previous: InquiryState, form: FormData): Promise<InquiryState> => {
+    // The server drops anything sent faster than a person fills the form. A visitor who autofills and
+    // sends at once is a person: hold the inquiry for the rest of that time instead of losing it.
+    const remaining = INQUIRY_LIMITS.minFillMs - (performance.now() - startedAt.current);
+    if (remaining > 0) await new Promise((resolve) => setTimeout(resolve, remaining));
+    form.set('elapsedMs', String(performance.now() - startedAt.current));
+    // A dropped connection or a deployment between load and submit rejects the action. Nothing above
+    // this form catches that, so the page would die and take the visitor's message with it.
     try {
       return await action(previous, form);
     } catch {
@@ -93,7 +99,6 @@ function Inquiry({
   const [email, setEmail] = useState('');
   const [consent, setConsent] = useState(false);
   const [tried, setTried] = useState(false);
-  const startedAt = useRef(0);
   const emailField = useRef<HTMLInputElement>(null);
   const consentBox = useRef<HTMLInputElement>(null);
   const dropZone = useRef<HTMLInputElement>(null);
@@ -133,7 +138,6 @@ function Inquiry({
     if (addressMissing || !consent || problem) return;
     const data = new FormData(event.currentTarget);
     data.set('locale', locale);
-    data.set('elapsedMs', String(performance.now() - startedAt.current));
     for (const file of files) data.append('files', file);
     startTransition(() => submit(data));
   };
