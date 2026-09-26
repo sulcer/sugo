@@ -11,7 +11,8 @@ function machine(stock: Stock) {
   let [x, r] = [-18, STOCK_RADIUS + 26];
   for (const move of buildProgram(stock.part)) {
     const steps = Math.max(1, Math.ceil(Math.hypot(move.x - x, move.r - r) / (stock.step * 0.5)));
-    for (let s = 1; s <= steps; s++) cutStock(stock, x + ((move.x - x) * s) / steps, Math.abs(r + ((move.r - r) * s) / steps), move);
+    for (let s = 1; s <= steps; s++)
+      cutStock(stock, x + ((move.x - x) * s) / steps, Math.abs(r + ((move.r - r) * s) / steps), move);
     [x, r] = [move.x, move.r];
   }
   dropOffcut(stock);

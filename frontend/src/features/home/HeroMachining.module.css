@@ -1,0 +1,21 @@
+/*
+ * The server sends the finished drawing. Where JavaScript will plot it (motion allowed, room for
+ * the animation), hold the lines back until the plotter starts, so the drawing never flashes on and
+ * off at load. If the script never runs, the drawing appears after 3 s anyway.
+ */
+@media (scripting: enabled) and (prefers-reduced-motion: no-preference) and (min-width: 460px) {
+  .gated :is([data-plot], [data-centre], [data-hatch], [data-op-mark]) {
+    opacity: 0;
+    animation: reveal 0s linear 3s forwards;
+  }
+
+  .gated [data-op-label] {
+    color: var(--color-grey-light);
+  }
+}
+
+@keyframes reveal {
+  to {
+    opacity: 1;
+  }
+}

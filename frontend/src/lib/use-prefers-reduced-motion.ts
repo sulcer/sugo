@@ -15,3 +15,6 @@ const getSnapshot = () => typeof window.matchMedia === 'function' && window.matc
 export function usePrefersReducedMotion(): boolean {
   return useSyncExternalStore(subscribe, getSnapshot, () => false);
 }
+
+/** The same preference, read directly: effects that start motion must not trust the hydration value. */
+export const prefersReducedMotion = getSnapshot;
