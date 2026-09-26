@@ -19,7 +19,6 @@ export type StageOptions = {
   size: readonly [width: number, height: number];
   /** The drawing's view box; the camera frames it exactly as the SVG (`meet`) does at this size. */
   viewBox: ViewBox;
-  preserveDrawingBuffer?: boolean;
 };
 
 export type Stage = { canvas: HTMLCanvasElement; scene: Scene; render(): void; dispose(): void };
@@ -32,10 +31,10 @@ export type Stage = { canvas: HTMLCanvasElement; scene: Scene; render(): void; d
  * limit. A lost context never comes back to its canvas, so every stage draws on a canvas of its own
  * and takes it out of the page again.
  */
-export function createStage({ host, size, viewBox, preserveDrawingBuffer = false }: StageOptions): Stage {
+export function createStage({ host, size, viewBox }: StageOptions): Stage {
   const canvas = document.createElement('canvas');
   const [width, height] = size;
-  const renderer = new WebGLRenderer({ canvas, antialias: true, alpha: true, preserveDrawingBuffer });
+  const renderer = new WebGLRenderer({ canvas, antialias: true, alpha: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   renderer.setSize(width, height, false);
   renderer.outputColorSpace = SRGBColorSpace;

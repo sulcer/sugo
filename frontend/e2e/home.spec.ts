@@ -78,8 +78,21 @@ async function expectPrerenderedStill(page: Page) {
   const still = page.locator('main img[srcset*="/hero/flange"]');
   await expect(still).toBeVisible();
   await expect.poll(() => still.evaluate((image: HTMLImageElement) => image.naturalWidth)).toBeGreaterThan(0);
-  await expect(page.locator('canvas')).toHaveCount(0);
+  // Machining would have built its scene 1.25 s after hydration; give it the chance to (wrongly) appear.
+  await page.waitForTimeout(2500);
+  expect(await page.locator('canvas').count()).toBe(0);
 }
+
+test('keeps the still out of the way of a hero that machines', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'a hero wide enough to machine');
+  const fetched: string[] = [];
+  page.on('request', (request) => {
+    if (request.url().includes('/hero/')) fetched.push(request.url());
+  });
+  await page.goto('/');
+  await page.waitForTimeout(1500);
+  expect([await page.locator('main img[srcset*="/hero/flange"]').isVisible(), fetched]).toEqual([false, []]);
+});
 
 test('shows phones the finished part as a prerendered image, without 3D', async ({ page, isMobile }) => {
   test.skip(!isMobile, 'a hero too narrow to machine');

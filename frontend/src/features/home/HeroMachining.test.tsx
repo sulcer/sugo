@@ -63,7 +63,11 @@ beforeEach(() => {
     addEventListener: (_: string, onChange: () => void) => (motionChanged = onChange),
     removeEventListener() {},
   }));
-  vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockImplementation(() => width);
+  // Browsers round clientWidth; the box keeps its fraction.
+  vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockImplementation(() => Math.round(width));
+  vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(
+    () => ({ width, height: 450 }) as DOMRect,
+  );
   vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockImplementation(() => 450);
 });
 
@@ -217,4 +221,18 @@ it('stops machining when the hero narrows past 460 px, even without a redraw', a
   resize();
   await settle();
   expect(three.dispose).toHaveBeenCalled();
+});
+
+it('shows the still, not machining, for a hero a fraction of a pixel under 460 px', async () => {
+  width = 459.6;
+  await renderHero();
+  await settle(2000);
+  expect(three.load).not.toHaveBeenCalled();
+});
+
+it('asks phones and reduced-motion visitors to fetch the still early, and nobody else', () => {
+  const html = renderToString(<HeroMachining operations={OPERATIONS} />);
+  expect(html.match(/<link rel="preload"[^>]*>/)?.[0]).toContain(
+    'media="(max-width: 493px), (prefers-reduced-motion: reduce)"',
+  );
 });

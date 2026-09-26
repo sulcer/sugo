@@ -14,8 +14,6 @@ export type ModelSceneOptions = {
   drawing: Drawing;
   size: readonly [width: number, height: number];
   tone: Tone;
-  /** Keep the frame readable after rendering (needed to copy a still into an image). */
-  preserveDrawingBuffer?: boolean;
 };
 
 export type ModelScene = {
@@ -40,15 +38,8 @@ const MILLED_TILT: Tilt = { x: -0.98, y: 0, rest: -0.55 };
  * An orthographic scene aligned to the drawing's view box, so frame 2 overlays the section exactly
  * and frame 3 tilts the part into view and scales it to fit the main view's region.
  */
-export function createModelScene({
-  host,
-  part,
-  drawing,
-  size,
-  tone,
-  preserveDrawingBuffer = false,
-}: ModelSceneOptions): ModelScene {
-  const stage = createStage({ host, size, viewBox: drawing.viewBox, preserveDrawingBuffer });
+export function createModelScene({ host, part, drawing, size, tone }: ModelSceneOptions): ModelScene {
+  const stage = createStage({ host, size, viewBox: drawing.viewBox });
   const { scene } = stage;
   const [vx, vy, vw, vh] = drawing.viewBox;
 

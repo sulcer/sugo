@@ -14,9 +14,9 @@ export function renderHeroStill(width: number): string {
     drawing: drawSubject(HERO_SUBJECT, k),
     size: [width, Math.round(viewHeight / k)],
     tone: HERO_TONE,
-    preserveDrawingBuffer: true,
   });
   try {
+    // Read back in the same task as the render, so the drawing buffer need not be preserved.
     model.pose(3);
     model.spinTo(model.restAngle);
     model.render();

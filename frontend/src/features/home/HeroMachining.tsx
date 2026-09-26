@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState, type Dispatch, type SetStateAction } from 'react';
+import { preload } from 'react-dom';
 import { plotLines, revealHatch, showFrame } from '@/drawing/animations';
 import { DrawingSvg } from '@/drawing/DrawingSvg';
 import { drawSubject, viewBoxOf, type Drawing } from '@/drawing/geometry';
@@ -24,6 +25,10 @@ const STRIP_BAND_PX = 56;
 /** Below this width the hero shows the finished part as a still (HeroMachining.module.css tests the same). */
 const STATIC_BELOW_PX = 460;
 const STILL_SOURCES = still.widths.map((width) => `/hero/flange-${width}.webp ${width}w`).join(', ');
+const STILL_SRC = `/hero/flange-${still.widths.at(-1)}.webp`;
+const STILL_SIZES = '(max-width: 700px) 100vw, 690px';
+/** Where the still shows: a hero under 460 px (viewport minus its 34 px of margin) or reduced motion. */
+const STILL_MEDIA = '(max-width: 493px), (prefers-reduced-motion: reduce)';
 const PLOT_MS = 1300;
 const MACHINING_STARTS_AT_MS = 1250;
 const FINISHED_HOLD_MS = 1200;
@@ -37,6 +42,14 @@ type HeroMachiningProps = { operations: readonly string[]; nominalWidth?: number
  * shown by CSS alone, so they never load or run the 3D code.
  */
 export function HeroMachining({ operations, nominalWidth = 690 }: HeroMachiningProps) {
+  // The still is the largest paint on phones but lazy, so the preload scanner would miss it.
+  preload(STILL_SRC, {
+    as: 'image',
+    imageSrcSet: STILL_SOURCES,
+    imageSizes: STILL_SIZES,
+    media: STILL_MEDIA,
+    fetchPriority: 'high',
+  });
   const rootRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
@@ -84,12 +97,12 @@ export function HeroMachining({ operations, nominalWidth = 690 }: HeroMachiningP
     if (!root || !stage || !svg || !host || !toolGroup) return;
     if (!feed || !rapid || !turn || !thread || !drill || !part) return;
     // Read the preference directly: during hydration the hook still reports the server's `false`.
-    if (prefersReducedMotion() || root.clientWidth < STATIC_BELOW_PX) return;
+    if (prefersReducedMotion() || root.getBoundingClientRect().width < STATIC_BELOW_PX) return;
 
     const overlay: ToolOverlayHandle = { feed, rapid, tools: { turn, thread, drill, part } };
     const controller = new AbortController();
     const cleanups: (() => void)[] = [];
-    const context: SequenceContext = {
+    const context: MachiningContext = {
       stage,
       svg,
       host,
@@ -101,12 +114,13 @@ export function HeroMachining({ operations, nominalWidth = 690 }: HeroMachiningP
       cleanups,
       setGated,
       setOperation,
+      setReadoutVisible,
+      readout: (x, z) => {
+        if (readoutXRef.current) readoutXRef.current.textContent = x;
+        if (readoutZRef.current) readoutZRef.current.textContent = z;
+      },
     };
-    const readout = (x: string, z: string) => {
-      if (readoutXRef.current) readoutXRef.current.textContent = x;
-      if (readoutZRef.current) readoutZRef.current.textContent = z;
-    };
-    machinePart({ ...context, setReadoutVisible, readout }).catch(() => {
+    machinePart(context).catch(() => {
       if (controller.signal.aborted) return;
       // No WebGL, or the context died: free what was built and leave the finished drawing.
       cleanups
@@ -142,9 +156,9 @@ export function HeroMachining({ operations, nominalWidth = 690 }: HeroMachiningP
         {/* eslint-disable-next-line @next/next/no-img-element -- prerendered sizes from scripts/render-hero-still.mjs */}
         <img
           alt=""
-          src={`/hero/flange-${still.widths.at(-1)}.webp`}
+          src={STILL_SRC}
           srcSet={STILL_SOURCES}
-          sizes="(max-width: 700px) 100vw, 690px"
+          sizes={STILL_SIZES}
           width={still.size.width}
           height={still.size.height}
           loading="lazy"
@@ -183,7 +197,8 @@ export function HeroMachining({ operations, nominalWidth = 690 }: HeroMachiningP
   );
 }
 
-type SequenceContext = {
+/** Everything one machining run works with; aborted through `signal`, undone through `cleanups`. */
+type MachiningContext = {
   stage: HTMLDivElement;
   svg: SVGSVGElement;
   /** Receives the 3D scene's canvas, created per run and removed with the scene. */
@@ -196,15 +211,12 @@ type SequenceContext = {
   cleanups: (() => void)[];
   setGated: Dispatch<SetStateAction<boolean>>;
   setOperation: Dispatch<SetStateAction<number>>;
+  setReadoutVisible: Dispatch<SetStateAction<boolean>>;
+  readout: (x: string, z: string) => void;
 };
 
 const stageSize = (stage: HTMLElement) => [stage.clientWidth, stage.clientHeight] as const;
 const mainHatch = (svg: SVGSVGElement) => svg.querySelector<SVGGElement>('[data-view="a"] [data-hatch]');
-
-type MachiningContext = SequenceContext & {
-  setReadoutVisible: Dispatch<SetStateAction<boolean>>;
-  readout: (x: string, z: string) => void;
-};
 
 async function machinePart(context: MachiningContext) {
   const { stage, svg, host, toolGroup, overlay, drawing, signal, cleanups, finished } = context;
@@ -257,7 +269,7 @@ async function machinePart(context: MachiningContext) {
   cleanups.push(startSpin(model));
 }
 
-function resetStage({ svg, toolGroup, overlay }: SequenceContext) {
+function resetStage({ svg, toolGroup, overlay }: MachiningContext) {
   svg.getAnimations?.({ subtree: true }).forEach((animation) => animation.cancel());
   toolGroup.style.removeProperty('opacity');
   toolGroup.style.removeProperty('transition');

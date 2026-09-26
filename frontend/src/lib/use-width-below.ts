@@ -7,7 +7,8 @@ export function useWidthBelow(ref: RefObject<HTMLElement | null>, px: number): b
   useLayoutEffect(() => {
     const element = ref.current;
     if (!element) return;
-    const measure = () => setBelow(element.clientWidth < px);
+    // The box's fractional width, as container queries see it (clientWidth is rounded).
+    const measure = () => setBelow(element.getBoundingClientRect().width < px);
     measure();
     const observer = new ResizeObserver(measure);
     observer.observe(element);
