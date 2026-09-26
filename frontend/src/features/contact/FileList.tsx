@@ -28,7 +28,7 @@ export function FileList({ files, removeLabel, onRemove }: FileListProps) {
           <button
             type="button"
             onClick={() => onRemove(file)}
-            aria-label={removeLabel}
+            aria-label={`${removeLabel} ${file.name}`}
             className="cursor-pointer p-2 text-[16px] hover:text-accent"
           >
             ×

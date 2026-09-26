@@ -68,7 +68,7 @@ describe('InquiryForm', () => {
   it('drops a drawing from the list when it is removed', async () => {
     const user = renderForm();
     await user.upload(filePicker(), drawing('risba.pdf'));
-    await user.click(screen.getByRole('button', { name: copy.remove }));
+    await user.click(screen.getByRole('button', { name: `${copy.remove} risba.pdf` }));
     expect(screen.queryByText('risba.pdf')).not.toBeInTheDocument();
   });
 
