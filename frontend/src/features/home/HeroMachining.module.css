@@ -22,3 +22,31 @@
     opacity: 1;
   }
 }
+
+/*
+ * Heroes too narrow to machine (the script's 460 px test) and visitors who reduce motion see the
+ * finished part: the prerendered still over the end view, in place of the half-section.
+ */
+.still {
+  display: none;
+}
+
+@container (width < 460px) {
+  .still {
+    display: block;
+  }
+
+  .hero [data-view='a'] {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .still {
+    display: block;
+  }
+
+  .hero [data-view='a'] {
+    opacity: 0;
+  }
+}

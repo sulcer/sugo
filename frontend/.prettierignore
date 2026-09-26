@@ -4,3 +4,5 @@ playwright-report
 test-results
 package-lock.json
 src/**/__fixtures__
+# Written by scripts/render-hero-still.mjs
+src/features/home/hero-still.json

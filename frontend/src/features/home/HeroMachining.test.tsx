@@ -4,19 +4,21 @@ import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { HeroMachining } from './HeroMachining';
 
 const three = vi.hoisted(() => ({
-  renderStill: vi.fn(),
+  load: vi.fn(),
   createModelScene: vi.fn(),
   runMachining: vi.fn(),
   startSpin: vi.fn(),
   dispose: vi.fn(),
 }));
 vi.mock('@/three/load-hero', () => ({
-  loadHeroThree: async () => ({
-    renderStill: three.renderStill,
-    createModelScene: three.createModelScene,
-    runMachining: three.runMachining,
-    startSpin: three.startSpin,
-  }),
+  loadHeroThree: async () => {
+    three.load();
+    return {
+      createModelScene: three.createModelScene,
+      runMachining: three.runMachining,
+      startSpin: three.startSpin,
+    };
+  },
 }));
 
 const OPERATIONS = ['Čelo', 'Grobo', 'Fino', 'Navoj', 'Vrtanje', 'Odrez'];
@@ -28,7 +30,7 @@ beforeEach(() => {
   vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
   reducedMotion = false;
   width = 700;
-  three.renderStill.mockReset().mockReturnValue('data:image/png;base64,AAAA');
+  three.load.mockReset();
   three.createModelScene.mockReset().mockReturnValue({
     canvas: document.createElement('canvas'),
     dispose: three.dispose,
@@ -81,16 +83,25 @@ it('turns the part on screens wide enough for it', async () => {
   expect(three.runMachining).toHaveBeenCalledOnce();
 });
 
-it('shows a still of the finished part when the visitor prefers reduced motion', async () => {
+it('never loads the 3D code for visitors who prefer reduced motion', async () => {
   reducedMotion = true;
   await renderHero();
-  expect([three.renderStill.mock.calls.length, three.runMachining.mock.calls.length]).toEqual([1, 0]);
+  await settle(2000);
+  expect(three.load).not.toHaveBeenCalled();
 });
 
-it('shows a still of the finished part on narrow screens', async () => {
+it('never loads the 3D code on heroes too narrow to machine', async () => {
   width = 400;
   await renderHero();
-  expect([three.renderStill.mock.calls.length, three.runMachining.mock.calls.length]).toEqual([1, 0]);
+  await settle(2000);
+  expect(three.load).not.toHaveBeenCalled();
+});
+
+it('offers the finished part as a prerendered image in two sizes', async () => {
+  const { container } = await renderHero();
+  expect(container.querySelector('img')?.getAttribute('srcset')).toBe(
+    '/hero/flange-600.webp 600w, /hero/flange-1200.webp 1200w',
+  );
 });
 
 it('never starts the plotter while hydrating for visitors who prefer reduced motion', async () => {
@@ -113,15 +124,6 @@ it('ticks off every operation in the still', async () => {
   expect(
     [...container.querySelectorAll('[data-op]')].every((cell) => cell.getAttribute('data-op') === 'done'),
   ).toBe(true);
-});
-
-it('keeps the complete drawing when the browser cannot render 3D', async () => {
-  reducedMotion = true;
-  three.renderStill.mockImplementation(() => {
-    throw new Error('WebGL unavailable');
-  });
-  const { container } = await renderHero();
-  expect((container.querySelector('[data-view="a"]') as SVGGElement).style.opacity).not.toBe('0');
 });
 
 const startMachining = async () => {

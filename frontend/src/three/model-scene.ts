@@ -137,16 +137,3 @@ export function createModelScene({
     },
   };
 }
-
-/** Renders frame 3 once into an offscreen canvas and returns it as an image (for static visitors). */
-export function renderStill(options: Omit<ModelSceneOptions, 'host' | 'preserveDrawingBuffer'>): string {
-  const model = createModelScene({ ...options, preserveDrawingBuffer: true });
-  try {
-    model.pose(3);
-    model.spinTo(model.restAngle);
-    model.render();
-    return model.canvas.toDataURL('image/png');
-  } finally {
-    model.dispose();
-  }
-}

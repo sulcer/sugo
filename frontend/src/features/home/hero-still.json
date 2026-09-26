@@ -1,0 +1,22 @@
+{
+  "widths": [
+    600,
+    1200
+  ],
+  "size": {
+    "width": 1200,
+    "height": 720
+  },
+  "sources": [
+    "scripts/hero-still-entry.ts",
+    "src/features/home/hero-part.ts",
+    "src/drawing/geometry/parts-table.ts",
+    "src/drawing/geometry/turned.ts",
+    "src/three/model-scene.ts",
+    "src/three/stage.ts",
+    "src/three/environment.ts",
+    "src/three/materials.ts",
+    "src/three/turned-mesh.ts"
+  ],
+  "sha256": "955d529a2d5010e4a9d5f53f438603b08a31361f2b62c26167bb4e9dc9776905"
+}

@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 
 const HEADINGS = {
   '/': 'Kakovostna mehanska obdelava kovin za vaše inovativne ideje',
@@ -72,8 +72,26 @@ test.describe('laid out without scripts', () => {
   }
 });
 
+/** The prerendered still of the finished part is on screen, loaded, and no 3D scene exists. */
+async function expectPrerenderedStill(page: Page) {
+  await page.goto('/');
+  const still = page.locator('main img[srcset*="/hero/flange"]');
+  await expect(still).toBeVisible();
+  await expect.poll(() => still.evaluate((image: HTMLImageElement) => image.naturalWidth)).toBeGreaterThan(0);
+  await expect(page.locator('canvas')).toHaveCount(0);
+}
+
+test('shows phones the finished part as a prerendered image, without 3D', async ({ page, isMobile }) => {
+  test.skip(!isMobile, 'a hero too narrow to machine');
+  await expectPrerenderedStill(page);
+});
+
 test.describe('for visitors who prefer reduced motion', () => {
   test.use({ reducedMotion: 'reduce' });
+
+  test('shows the finished part as a prerendered image, without 3D', async ({ page }) => {
+    await expectPrerenderedStill(page);
+  });
 
   test('shows the hero part finished, every operation ticked', async ({ page }) => {
     await page.goto('/');
