@@ -34,7 +34,7 @@ export function ProcessFilter({ copy, value, onChange, allRef }: ProcessFilterPr
               type="button"
               aria-pressed={value === option}
               onClick={() => onChange(option)}
-              className="flex h-[42px] cursor-pointer items-center gap-2 border-r border-ink px-4 text-[15px] aria-pressed:cursor-auto aria-pressed:bg-ink aria-pressed:text-panel"
+              className="flex h-[42px] cursor-pointer items-center gap-2 border-r border-ink px-4 text-[15px] aria-pressed:bg-ink aria-pressed:text-panel"
             >
               {label.charAt(0).toUpperCase() + label.slice(1)}{' '}
               <span className="font-mono text-xs opacity-75">{counts[option]}</span>
