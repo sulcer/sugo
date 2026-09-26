@@ -7,6 +7,7 @@
 import fixtures from '../__fixtures__/design-geometry.json';
 import type { Drawing } from './layer';
 import { PART_GEOMETRY, type PartKind } from './parts-table';
+import { MACHINE_KINDS, drawMachine } from './machines';
 import { drawMilled } from './milled';
 import { drawTurned } from './turned';
 
@@ -91,6 +92,15 @@ describe.each(kinds('milled'))('milled part %s', (kind) => {
     const part = PART_GEOMETRY[kind];
     if (part.type !== 'milled') throw new Error(`${kind} is not milled`);
     expect(toDesignShape(drawMilled(part, 1, false))).toEqual(partFixtures[kind].noCut);
+  });
+});
+
+describe.each(MACHINE_KINDS)('machine %s', (kind) => {
+  it('matches the design engine at every scale', () => {
+    const machineFixtures = fixtures.machines as Record<string, Record<string, DesignDrawing>>;
+    for (const k of fixtures.k) {
+      expect(toDesignShape(drawMachine(kind, k))).toEqual(machineFixtures[kind][String(k)]);
+    }
   });
 });
 
