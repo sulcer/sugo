@@ -133,7 +133,7 @@ export const PRIVACY: Localized<PrivacyStatement> = {
           'Cookies sind kleine Textdateien, die auf Ihren Computer oder Ihr mobiles Gerät heruntergeladen werden, wenn Sie eine Website besuchen. Die Website verwendet Google-Analytics-Cookies, um den Besuch unserer Website zu analysieren. Mit Hilfe dieser Cookies werden statistische Daten über die Nutzung der Website erhoben, ohne dass Besucher persönlich identifiziert werden.',
         ],
         cookieTable: {
-          headers: ['Name', 'Zweck', 'Speicherdauer'],
+          headers: ['Name', 'Zweck', 'Dauer'],
           rows: [
             [
               '_ga',
