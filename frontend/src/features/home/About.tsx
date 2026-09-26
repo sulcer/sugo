@@ -16,8 +16,8 @@ export function About({ locale }: { locale: Locale }) {
       </div>
       <div className="flex min-w-0 flex-[1.5_1_520px] items-end pt-[clamp(16px,3cqw,40px)] pr-gutter pb-[clamp(48px,5cqw,72px)] pl-4">
         {/* The scale is drawn on wide sheets; the list, always present for assistive tech, on narrow ones. */}
-        <TimelineScale locale={locale} className="@max-timeline:hidden" />
-        <TimelineList locale={locale} className="@timeline:sr-only" />
+        <TimelineScale locale={locale} className="@max-wide:hidden" />
+        <TimelineList locale={locale} className="@wide:sr-only" />
       </div>
     </SheetSection>
   );

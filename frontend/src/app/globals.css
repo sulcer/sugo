@@ -37,10 +37,10 @@
 
   --spacing-gutter: clamp(16px, 3cqw, 40px);
 
-  /* container sizes: max-w-sheet, and the @nav / @timeline / @rail container variants */
+  /* container sizes: max-w-sheet, and the @nav / @wide / @rail container variants */
   --container-sheet: 1280px;
   --container-nav: 900px;
-  --container-timeline: 700px;
+  --container-wide: 700px;
   --container-rail: 640px;
 }
 
