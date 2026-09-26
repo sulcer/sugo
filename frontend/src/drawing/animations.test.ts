@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { plotLines, revealHatch } from './animations';
+import { plotLines, revealHatch, showFrame } from './animations';
 
 type FakeAnimation = {
   keyframes: Keyframe[];
@@ -66,6 +66,12 @@ describe('plotLines', () => {
     expect([line.style.strokeDasharray, line.getAttribute('pathLength')]).toEqual(['', null]);
   });
 
+  it('lets the labels go once they have faded in, so nothing stays animated', () => {
+    plotLines(drawingWith(1), '[data-plot]', '[data-fade]', 1000);
+    animations[1].onfinish?.();
+    expect(animations[1].cancelled).toBe(true);
+  });
+
   it('cancels the previous run when the drawing is plotted again', () => {
     const svg = drawingWith(1);
     plotLines(svg, '[data-plot]', '[data-fade]', 1000);
@@ -127,5 +133,35 @@ describe('revealHatch', () => {
     advanceTo(250);
     advanceTo(500);
     expect(clipWidth(svg)).toBe('200');
+  });
+});
+
+describe('showFrame', () => {
+  const drawing = () => {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.innerHTML = '<g data-view="a"><g data-hatch=""></g></g><g data-view="b"></g>';
+    return svg;
+  };
+  const opacities = (svg: SVGSVGElement) => [
+    (svg.querySelector('[data-view="a"]') as SVGGElement).style.opacity,
+    (svg.querySelector('[data-hatch]') as SVGGElement).style.opacity,
+  ];
+
+  it('shows the whole drawing in frame 1', () => {
+    const svg = drawing();
+    showFrame(svg, 1);
+    expect(opacities(svg)).toEqual(['1', '1']);
+  });
+
+  it('drops the hatching in frame 2 while the metal fills the section', () => {
+    const svg = drawing();
+    showFrame(svg, 2);
+    expect(opacities(svg)).toEqual(['1', '0']);
+  });
+
+  it('hides the main view in frame 3 while the model stands in for it', () => {
+    const svg = drawing();
+    showFrame(svg, 3);
+    expect(opacities(svg)).toEqual(['0', '0']);
   });
 });

@@ -33,13 +33,17 @@ export function plotLines(root: Element, selector: string, fadeSelector: string,
       animation.cancel();
     };
   });
-  root.querySelectorAll<SVGElement>(fadeSelector).forEach((element) =>
-    animateOnce(element, [{ opacity: 0 }, { opacity: 0 }, { opacity: 1 }], {
+  root.querySelectorAll<SVGElement>(fadeSelector).forEach((element) => {
+    const animation = animateOnce(element, [{ opacity: 0 }, { opacity: 0 }, { opacity: 1 }], {
       duration: durationMs * 1.05,
       easing: 'linear',
       fill: 'both',
-    }),
-  );
+    });
+    // A finished fill would keep the drawing on its own compositor layer, softening its lines.
+    animation.onfinish = () => {
+      if (runningAnimation.get(element) === animation) animation.cancel();
+    };
+  });
 }
 
 /** Sweeps the section hatching in from the left by widening its clip rectangle. */
@@ -55,4 +59,16 @@ export function revealHatch(svg: SVGSVGElement, durationMs: number) {
   };
   clip.setAttribute('width', '0');
   requestAnimationFrame(step);
+}
+
+/**
+ * Drawing → metal → model sequence: 1 = the drawing, 2 = hatching gone (metal fills the section),
+ * 3 = main view hidden (the 3D model stands in for it).
+ */
+export function showFrame(svg: SVGSVGElement, frame: 1 | 2 | 3) {
+  const main = svg.querySelector<SVGGElement>('[data-view="a"]');
+  if (!main) return;
+  main.style.opacity = frame === 3 ? '0' : '1';
+  const hatch = main.querySelector<SVGGElement>('[data-hatch]');
+  if (hatch) hatch.style.opacity = frame >= 2 ? '0' : '1';
 }
