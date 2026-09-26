@@ -5,6 +5,9 @@ import { languageAlternates } from './alternates';
 import { DEFAULT_LOCALE, isLocale, type Locale } from './locales';
 import { localePath, type RouteKey } from './routes';
 
+/** The link-preview card: the top of the home sheet (public/og.png). */
+const SHARE_CARD = { url: '/og.png', width: 1200, height: 630 };
+
 const OPEN_GRAPH_LOCALE: Record<Locale, string> = { sl: 'sl_SI', de: 'de_DE', en: 'en_GB' };
 
 /** Title, description, canonical url, hreflang alternates and the link-preview card of a page. */
@@ -22,6 +25,7 @@ export function pageMetadata(locale: Locale, route: RouteKey): Metadata {
       url,
       title: `${title} · ${COMPANY.name}`,
       description,
+      images: [{ ...SHARE_CARD, alt: `${COMPANY.name} — ${SEO[locale].home.title}` }],
     },
   };
 }

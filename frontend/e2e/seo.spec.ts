@@ -39,3 +39,18 @@ test('the home page tells search engines who SUGO is', async ({ page }) => {
     'Jakobski Dol',
   ]);
 });
+
+test('every page shares a link preview card', async ({ page }) => {
+  await page.goto('/en/strojni-park');
+  const meta = (property: string) => page.locator(`meta[property="${property}"]`).getAttribute('content');
+  expect([await meta('og:image'), await meta('og:image:width'), await meta('og:image:height')]).toEqual([
+    'https://sugo.si/og.png',
+    '1200',
+    '630',
+  ]);
+});
+
+test('serves the link preview image', async ({ request }) => {
+  const response = await request.get('/og.png');
+  expect([response.status(), response.headers()['content-type']]).toEqual([200, 'image/png']);
+});

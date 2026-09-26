@@ -18,6 +18,7 @@ it('describes a page with its canonical url, language alternates and open graph 
       title: 'Produkte · SUGO d.o.o.',
       description:
         'Zeichnungen und 3D-Modelle von Dreh- und Frästeilen aus der Fertigung von SUGO – aus Stahl, Edelstahl, Aluminium, Messing und Kunststoff.',
+      images: [{ url: '/og.png', width: 1200, height: 630, alt: 'SUGO d.o.o. — CNC-Drehen und Fräsen' }],
     },
   });
 });
