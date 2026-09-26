@@ -1,4 +1,6 @@
 import { expect, test } from '@playwright/test';
+import { localBusiness } from '../src/features/home/structured-data';
+import { LOCALES } from '../src/i18n/locales';
 
 test('the sitemap lists every page in every language with its alternates', async ({ request }) => {
   const xml = await (await request.get('/sitemap.xml')).text();
@@ -33,24 +35,22 @@ test('a page names its canonical url and its versions in the other languages', a
 test('the home page tells search engines who SUGO is', async ({ page }) => {
   await page.goto('/de');
   const data = JSON.parse((await page.locator('script[type="application/ld+json"]').textContent()) ?? '{}');
-  expect([data['@type'], data.name, data.address?.addressLocality]).toEqual([
-    'LocalBusiness',
-    'SUGO d.o.o.',
-    'Jakobski Dol',
-  ]);
+  expect(data).toEqual(localBusiness('de'));
 });
 
 test('every page shares a link preview card', async ({ page }) => {
   await page.goto('/en/strojni-park');
   const meta = (property: string) => page.locator(`meta[property="${property}"]`).getAttribute('content');
   expect([await meta('og:image'), await meta('og:image:width'), await meta('og:image:height')]).toEqual([
-    'https://sugo.si/og.png',
+    'https://sugo.si/og-en.png',
     '1200',
     '630',
   ]);
 });
 
-test('serves the link preview image', async ({ request }) => {
-  const response = await request.get('/og.png');
-  expect([response.status(), response.headers()['content-type']]).toEqual([200, 'image/png']);
-});
+for (const locale of LOCALES) {
+  test(`serves the ${locale} link preview image`, async ({ request }) => {
+    const response = await request.get(`/og-${locale}.png`);
+    expect([response.status(), response.headers()['content-type']]).toEqual([200, 'image/png']);
+  });
+}
