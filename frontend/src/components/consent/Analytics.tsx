@@ -1,10 +1,18 @@
-import Script from 'next/script';
-import { analyticsBootstrap, isMeasurementId } from './analytics-bootstrap';
+'use client';
 
-/** Google Analytics behind Consent Mode; renders nothing without a valid measurement id. */
-export function Analytics() {
-  const measurementId = process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS ?? '';
-  if (!isMeasurementId(measurementId)) return null;
+import Script from 'next/script';
+import { useSyncExternalStore } from 'react';
+import { analyticsBootstrap, isMeasurementId } from './analytics-bootstrap';
+import { readConsent, subscribeConsent } from './consent-store';
+
+/** Google Analytics, loaded only after the visitor accepted cookies (never before, never on refusal). */
+export function Analytics({ measurementId }: { measurementId: string }) {
+  const accepted = useSyncExternalStore(
+    subscribeConsent,
+    () => readConsent() === 'yes',
+    () => false,
+  );
+  if (!accepted || !isMeasurementId(measurementId)) return null;
   return (
     <>
       <Script id="analytics-consent" strategy="afterInteractive">

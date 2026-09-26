@@ -6,19 +6,28 @@ import type { COOKIE_NOTICE } from '@/content/shell';
 import type { Locale } from '@/i18n/locales';
 import { readConsent, subscribeConsent, writeConsent } from './consent-store';
 
-/** The bar appears only below the hero, so it never covers the headline or the primary button. */
+/**
+ * The bar appears only below the hero, so it never covers the headline or the primary button —
+ * or at once on a page too short to scroll that far, so every visitor can still choose.
+ */
 const SHOW_BELOW_PX = 520;
 
-const subscribeScroll = (onChange: () => void) => {
+const subscribeViewport = (onChange: () => void) => {
   window.addEventListener('scroll', onChange, { passive: true });
-  return () => window.removeEventListener('scroll', onChange);
+  window.addEventListener('resize', onChange);
+  return () => {
+    window.removeEventListener('scroll', onChange);
+    window.removeEventListener('resize', onChange);
+  };
 };
-const isPastHero = () => window.scrollY > SHOW_BELOW_PX;
+const isPastHero = () =>
+  window.scrollY > SHOW_BELOW_PX ||
+  document.documentElement.scrollHeight - window.innerHeight <= SHOW_BELOW_PX;
 
 type CookieBarProps = { copy: (typeof COOKIE_NOTICE)[Locale]; privacyHref: string };
 
 export function CookieBar({ copy, privacyHref }: CookieBarProps) {
-  const pastHero = useSyncExternalStore(subscribeScroll, isPastHero, () => false);
+  const pastHero = useSyncExternalStore(subscribeViewport, isPastHero, () => false);
   const undecided = useSyncExternalStore(
     subscribeConsent,
     () => readConsent() === null,

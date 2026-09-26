@@ -28,6 +28,7 @@ const mono = IBM_Plex_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://sugo.si'),
+  title: { default: 'SUGO d.o.o.', template: '%s · SUGO d.o.o.' },
 };
 
 export const dynamicParams = false;
@@ -49,7 +50,7 @@ export default async function LocaleLayout({ children, params }: LayoutProps<'/[
           <SiteFooter locale={locale} />
         </div>
         <CookieBar copy={COOKIE_NOTICE[locale]} privacyHref={localePath(locale, 'privacy')} />
-        <Analytics />
+        <Analytics measurementId={process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS ?? ''} />
       </body>
     </html>
   );

@@ -14,11 +14,12 @@ const listeners = new Set<() => void>();
 let unstoredConsent: Consent | null = null;
 
 export function readConsent(): Consent | null {
+  if (unstoredConsent) return unstoredConsent;
   try {
     const stored = localStorage.getItem(CONSENT_KEY);
     return stored === 'yes' || stored === 'no' ? stored : null;
   } catch {
-    return unstoredConsent;
+    return null;
   }
 }
 
