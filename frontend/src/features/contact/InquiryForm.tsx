@@ -6,6 +6,7 @@ import type { InquiryState } from '@/features/inquiry/handle-inquiry';
 import { checkFiles, INQUIRY_LIMITS, type FileProblem } from '@/features/inquiry/limits';
 import type { Locale } from '@/i18n/locales';
 import { cn } from '@/lib/cn';
+import { useHydrated } from '@/lib/use-hydrated';
 import { DropZone } from './DropZone';
 import { FileList } from './FileList';
 
@@ -103,6 +104,7 @@ function Inquiry({
   const [email, setEmail] = useState('');
   const [consent, setConsent] = useState(false);
   const [tried, setTried] = useState(false);
+  const hydrated = useHydrated();
   const emailField = useRef<HTMLInputElement>(null);
   const consentBox = useRef<HTMLInputElement>(null);
   const dropZone = useRef<HTMLInputElement>(null);
@@ -265,9 +267,10 @@ function Inquiry({
         )}
         <button
           type="submit"
-          disabled={pending}
+          // The action only runs with scripts; until then a click would post the message into the void.
+          disabled={pending || !hydrated}
           aria-busy={pending}
-          className="inline-flex h-13 cursor-pointer items-center gap-3 self-start bg-accent px-6.5 text-[16px] font-medium text-panel hover:bg-accent-hover active:bg-accent-active"
+          className="button-primary cursor-pointer self-start"
         >
           {pending ? copy.sending : copy.send}{' '}
           <span aria-hidden="true" className="font-mono">

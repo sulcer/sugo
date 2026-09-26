@@ -221,3 +221,11 @@ describe('InquiryForm', () => {
     });
   });
 });
+
+it('keeps the send button off until the form can really send', async () => {
+  const { renderToString } = await import('react-dom/server');
+  const html = renderToString(
+    <InquiryForm locale="sl" privacyHref="/varovanje-osebnih-podatkov" action={vi.fn()} />,
+  );
+  expect(html).toMatch(/<button type="submit"[^>]* disabled=""/);
+});
