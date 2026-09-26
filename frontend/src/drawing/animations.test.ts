@@ -66,6 +66,12 @@ describe('plotLines', () => {
     expect([line.style.strokeDasharray, line.getAttribute('pathLength')]).toEqual(['', null]);
   });
 
+  it('lets the labels go once they have faded in, so nothing stays animated', () => {
+    plotLines(drawingWith(1), '[data-plot]', '[data-fade]', 1000);
+    animations[1].onfinish?.();
+    expect(animations[1].cancelled).toBe(true);
+  });
+
   it('cancels the previous run when the drawing is plotted again', () => {
     const svg = drawingWith(1);
     plotLines(svg, '[data-plot]', '[data-fade]', 1000);

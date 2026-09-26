@@ -33,13 +33,17 @@ export function plotLines(root: Element, selector: string, fadeSelector: string,
       animation.cancel();
     };
   });
-  root.querySelectorAll<SVGElement>(fadeSelector).forEach((element) =>
-    animateOnce(element, [{ opacity: 0 }, { opacity: 0 }, { opacity: 1 }], {
+  root.querySelectorAll<SVGElement>(fadeSelector).forEach((element) => {
+    const animation = animateOnce(element, [{ opacity: 0 }, { opacity: 0 }, { opacity: 1 }], {
       duration: durationMs * 1.05,
       easing: 'linear',
       fill: 'both',
-    }),
-  );
+    });
+    // A finished fill would keep the drawing on its own compositor layer, softening its lines.
+    animation.onfinish = () => {
+      if (runningAnimation.get(element) === animation) animation.cancel();
+    };
+  });
 }
 
 /** Sweeps the section hatching in from the left by widening its clip rectangle. */
