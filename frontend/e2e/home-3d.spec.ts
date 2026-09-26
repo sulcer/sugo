@@ -3,6 +3,7 @@ import { collectErrors, scrollThrough } from './helpers';
 import { WEBGL } from './webgl';
 
 test.use({ launchOptions: WEBGL });
+test.skip(({ browserName }) => browserName !== 'chromium', 'the SwiftShader flags are Chromium-only');
 
 test('runs through the whole page without console errors', async ({ page }) => {
   const errors = collectErrors(page);
