@@ -22,7 +22,7 @@ for (const [path, title] of Object.entries(STATEMENTS)) {
   });
 }
 
-test('is reached from the footer of every sheet', async ({ page }) => {
+test('is linked from the footer', async ({ page }) => {
   // A visitor who has answered the cookie notice (on phones it covers the footer's last row).
   await page.addInitScript(() => localStorage.setItem('sugo-cookie', 'no'));
   await page.goto('/de');

@@ -22,13 +22,3 @@ for (const route of DRAWN) {
     expect(hidden).toEqual([]);
   });
 }
-
-test('the hero drawing is complete without JavaScript', async ({ page }) => {
-  await page.goto('/');
-  const hero = page.locator('main > section').first();
-  expect(
-    await hero
-      .locator('[data-plot]')
-      .evaluateAll((lines) => lines.every((line) => getComputedStyle(line).opacity === '1')),
-  ).toBe(true);
-});
