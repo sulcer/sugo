@@ -7,7 +7,8 @@ const TILT_IN_MS = 420;
 const SPIN_RAD_PER_S = 0.45;
 
 type FloorOptions = {
-  canvas: HTMLCanvasElement;
+  /** Receives the floor's canvas. */
+  host: HTMLElement;
   /** Wrapper of the floor drawing, faded out once the models have taken over. */
   drawing: HTMLElement;
   size: readonly [width: number, height: number];
@@ -20,17 +21,15 @@ type FloorOptions = {
  * to metal, the drawing hands over, then every part tilts in and turns. Returns a stop function
  * that restores the drawing and frees the WebGL context.
  */
-export function startFloor({ canvas, drawing, size, isVisible }: FloorOptions): () => void {
-  const [, , vw, vh] = PARTS_FLOOR.viewBox;
-  const k = Math.max(vw / size[0], vh / size[1]);
-  const stage = createStage({ canvas, size, viewBox: PARTS_FLOOR.viewBox, k });
+export function startFloor({ host, drawing, size, isVisible }: FloorOptions): () => void {
+  const stage = createStage({ host, size, viewBox: PARTS_FLOOR.viewBox });
   const floor = buildFloorItems();
   floor.items.forEach((item) => stage.scene.add(item.holder));
   const hatching = [...drawing.querySelectorAll<SVGElement>('[data-hatch]')];
   let frame = 0;
 
   stage.render();
-  canvas.style.opacity = '1';
+  stage.canvas.style.opacity = '1';
   hatching.forEach((hatch) => (hatch.style.opacity = '0'));
 
   const handover = setTimeout(() => {
@@ -56,7 +55,6 @@ export function startFloor({ canvas, drawing, size, isVisible }: FloorOptions): 
     cancelAnimationFrame(frame);
     stage.dispose();
     floor.dispose();
-    canvas.style.opacity = '0';
     drawing.style.opacity = '';
     hatching.forEach((hatch) => (hatch.style.opacity = ''));
   };

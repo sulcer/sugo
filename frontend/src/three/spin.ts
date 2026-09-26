@@ -7,9 +7,12 @@ const DRAG_RAD_PER_PX = 0.012;
 
 /**
  * Tilts the model into frame 3 (linear, hard stop), then turns it about its own axis. Dragging
- * turns it by hand; the spindle pauses while the tab is hidden. Returns a function that stops it.
+ * turns it by hand; the spindle pauses while the tab is hidden. Held `still` (reduced motion), the
+ * model rests in frame 3 at once and turns only by hand. Returns a function that stops it.
  */
-export function startSpin(model: ModelScene, canvas: HTMLCanvasElement): () => void {
+export function startSpin(model: ModelScene, { still = false }: { still?: boolean } = {}): () => void {
+  const { canvas } = model;
+  const tiltInMs = still ? 0 : TILT_IN_MS;
   const start = performance.now();
   let last = start;
   let angle = 0;
@@ -37,9 +40,9 @@ export function startSpin(model: ModelScene, canvas: HTMLCanvasElement): () => v
   const tick = (now: number) => {
     const dt = Math.min(0.05, (now - last) / 1000);
     last = now;
-    const progress = Math.min(1, (now - start) / TILT_IN_MS);
+    const progress = tiltInMs ? Math.min(1, (now - start) / tiltInMs) : 1;
     model.pose(3, progress);
-    if (progress >= 1 && !drag && !document.hidden) angle += dt * SPIN_RAD_PER_S;
+    if (progress >= 1 && !still && !drag && !document.hidden) angle += dt * SPIN_RAD_PER_S;
     model.spinTo(model.restAngle * progress + angle);
     model.render();
     frame = requestAnimationFrame(tick);

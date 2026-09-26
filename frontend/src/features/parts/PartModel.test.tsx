@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { PartModel } from './PartModel';
@@ -6,6 +6,7 @@ import { PartModel } from './PartModel';
 const scene = vi.hoisted(() => ({
   create: vi.fn(),
   dispose: vi.fn(),
+  startSpin: vi.fn(),
   stopSpin: vi.fn(),
 }));
 
@@ -13,11 +14,15 @@ vi.mock('@/three/model-scene', () => ({
   createModelScene: scene.create,
 }));
 vi.mock('@/three/spin', () => ({
-  startSpin: () => scene.stopSpin,
+  startSpin: scene.startSpin,
 }));
+
+let reducedMotion = false;
+let motionChanged = () => {};
 
 beforeEach(() => {
   scene.create.mockReset().mockImplementation(() => ({
+    canvas: document.createElement('canvas'),
     pose: vi.fn(),
     render: vi.fn(),
     spinTo: vi.fn(),
@@ -26,6 +31,8 @@ beforeEach(() => {
   }));
   scene.dispose.mockReset();
   scene.stopSpin.mockReset();
+  scene.startSpin.mockReset().mockReturnValue(scene.stopSpin);
+  reducedMotion = false;
   vi.stubGlobal(
     'ResizeObserver',
     class {
@@ -33,7 +40,13 @@ beforeEach(() => {
       disconnect() {}
     },
   );
-  vi.stubGlobal('matchMedia', () => ({ matches: false, addEventListener() {}, removeEventListener() {} }));
+  vi.stubGlobal('matchMedia', (query: string) => ({
+    get matches() {
+      return query.includes('reduce') && reducedMotion;
+    },
+    addEventListener: (_: string, onChange: () => void) => (motionChanged = onChange),
+    removeEventListener() {},
+  }));
 });
 
 afterEach(() => vi.unstubAllGlobals());
@@ -102,6 +115,29 @@ it('ignores the click that ends a drag', () => {
   renderPart();
   const button = screen.getByRole('button');
   fireEvent.pointerDown(button, { clientX: 10, clientY: 10 });
-  fireEvent.click(button, { clientX: 40, clientY: 10 });
+  fireEvent.click(button, { clientX: 40, clientY: 10, detail: 1 });
   expect(button).toHaveAttribute('aria-pressed', 'false');
+});
+
+it('starts from the keyboard even after a pointer press that never became a click', () => {
+  renderPart();
+  const button = screen.getByRole('button');
+  fireEvent.pointerDown(button, { clientX: 10, clientY: 10 });
+  fireEvent.click(button, { detail: 0 });
+  expect(button).toHaveAttribute('aria-pressed', 'true');
+});
+
+it('holds the model still for visitors who prefer reduced motion', async () => {
+  reducedMotion = true;
+  renderPart();
+  await userEvent.click(screen.getByRole('button'));
+  await waitFor(() => expect(scene.startSpin).toHaveBeenCalledWith(expect.anything(), { still: true }));
+});
+
+it('returns to the drawing when the visitor turns motion off', async () => {
+  renderPart();
+  await userEvent.click(screen.getByRole('button'));
+  reducedMotion = true;
+  act(() => motionChanged());
+  expect(screen.getByRole('button')).toHaveAttribute('aria-pressed', 'false');
 });

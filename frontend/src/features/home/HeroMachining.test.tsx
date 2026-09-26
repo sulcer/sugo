@@ -1,4 +1,4 @@
-import { act, render } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import { renderToString } from 'react-dom/server';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { HeroMachining } from './HeroMachining';
@@ -21,6 +21,7 @@ vi.mock('@/three/load-hero', () => ({
 
 const OPERATIONS = ['Čelo', 'Grobo', 'Fino', 'Navoj', 'Vrtanje', 'Odrez'];
 let reducedMotion = false;
+let motionChanged = () => {};
 let width = 700;
 
 beforeEach(() => {
@@ -28,9 +29,12 @@ beforeEach(() => {
   reducedMotion = false;
   width = 700;
   three.renderStill.mockReset().mockReturnValue('data:image/png;base64,AAAA');
-  three.createModelScene
-    .mockReset()
-    .mockReturnValue({ dispose: three.dispose, pose: vi.fn(), render: vi.fn() });
+  three.createModelScene.mockReset().mockReturnValue({
+    canvas: document.createElement('canvas'),
+    dispose: three.dispose,
+    pose: vi.fn(),
+    render: vi.fn(),
+  });
   three.runMachining.mockReset().mockReturnValue(new Promise(() => {}));
   three.startSpin.mockReset().mockReturnValue(() => {});
   three.dispose.mockReset();
@@ -42,8 +46,10 @@ beforeEach(() => {
     },
   );
   vi.stubGlobal('matchMedia', (query: string) => ({
-    matches: query.includes('reduce') && reducedMotion,
-    addEventListener() {},
+    get matches() {
+      return query.includes('reduce') && reducedMotion;
+    },
+    addEventListener: (_: string, onChange: () => void) => (motionChanged = onChange),
     removeEventListener() {},
   }));
   vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockImplementation(() => width);
@@ -118,12 +124,56 @@ it('keeps the complete drawing when the browser cannot render 3D', async () => {
   expect((container.querySelector('[data-view="a"]') as SVGGElement).style.opacity).not.toBe('0');
 });
 
-it('frees the 3D scene when it leaves the page', async () => {
-  const { unmount } = await renderHero();
+const startMachining = async () => {
+  const view = await renderHero();
   await settle(1300);
   await settle();
+  return view;
+};
+
+it('keeps its scene through its own re-renders while the part is machined', async () => {
+  await startMachining();
+  expect(three.dispose).not.toHaveBeenCalled();
+});
+
+it('frees the 3D scene when it leaves the page', async () => {
+  const { unmount } = await startMachining();
   unmount();
   expect(three.dispose).toHaveBeenCalledOnce();
+});
+
+it('finishes the drawing when the machining cannot start', async () => {
+  three.createModelScene.mockImplementation(() => {
+    throw new Error('WebGL unavailable');
+  });
+  const { container } = await startMachining();
+  expect((container.querySelector('[data-view="a"] [data-hatch]') as SVGGElement).style.opacity).not.toBe(
+    '0',
+  );
+});
+
+it('ticks off every operation when the machining cannot start', async () => {
+  three.createModelScene.mockImplementation(() => {
+    throw new Error('WebGL unavailable');
+  });
+  const { container } = await startMachining();
+  expect([...container.querySelectorAll('[data-op]')].map((cell) => cell.getAttribute('data-op'))).toEqual(
+    Array(6).fill('done'),
+  );
+});
+
+it('hides the readout when the machining fails', async () => {
+  three.runMachining.mockRejectedValue(new Error('context lost'));
+  await startMachining();
+  expect(screen.getByText('X Ø 69.000').parentElement).toHaveStyle({ opacity: '0' });
+});
+
+it('hides the readout when the visitor turns motion off mid-run', async () => {
+  await startMachining();
+  reducedMotion = true;
+  act(() => motionChanged());
+  await settle();
+  expect(screen.getByText('X Ø 69.000').parentElement).toHaveStyle({ opacity: '0' });
 });
 
 it('is decorative for assistive tech', async () => {

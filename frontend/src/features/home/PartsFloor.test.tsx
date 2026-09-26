@@ -102,3 +102,8 @@ it('frees the 3D scene when it leaves the page', async () => {
   unmount();
   expect(floor.stop).toHaveBeenCalledOnce();
 });
+
+it('reserves its room from its aspect ratio', () => {
+  const { container } = render(<PartsFloor aspect={2.7} />);
+  expect(parseFloat((container.firstElementChild as HTMLElement).style.aspectRatio)).toBe(2.7);
+});

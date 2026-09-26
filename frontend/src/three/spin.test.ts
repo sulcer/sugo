@@ -14,13 +14,16 @@ const advanceTo = (time: number) => {
 
 const fakeModel = () => {
   const state = { frame: 0, progress: 0, angle: 0, renders: 0 };
+  const canvas = document.createElement('canvas');
+  canvas.setPointerCapture = vi.fn();
   const model = {
+    canvas,
     restAngle: 0.35,
     pose: (frame: 2 | 3, progress = 1) => Object.assign(state, { frame, progress }),
     spinTo: (angle: number) => Object.assign(state, { angle }),
     render: () => state.renders++,
   } as unknown as ModelScene;
-  return { model, state };
+  return { model, state, canvas };
 };
 
 beforeEach(() => {
@@ -41,14 +44,14 @@ afterEach(() => {
 
 it('tilts the part in linearly over 420 ms', () => {
   const { model, state } = fakeModel();
-  startSpin(model, document.createElement('canvas'));
+  startSpin(model);
   advanceTo(210);
   expect(state.progress).toBe(0.5);
 });
 
 it('stops the tilt exactly at the resting pose', () => {
   const { model, state } = fakeModel();
-  startSpin(model, document.createElement('canvas'));
+  startSpin(model);
   advanceTo(420);
   advanceTo(900);
   expect(state.progress).toBe(1);
@@ -56,7 +59,7 @@ it('stops the tilt exactly at the resting pose', () => {
 
 it('turns at a constant spindle speed once tilted in', () => {
   const { model, state } = fakeModel();
-  startSpin(model, document.createElement('canvas'));
+  startSpin(model);
   advanceTo(420);
   const tiltedIn = state.angle;
   advanceTo(440);
@@ -64,10 +67,8 @@ it('turns at a constant spindle speed once tilted in', () => {
 });
 
 it('turns the part by hand while it is dragged', () => {
-  const { model, state } = fakeModel();
-  const canvas = document.createElement('canvas');
-  canvas.setPointerCapture = vi.fn();
-  startSpin(model, canvas);
+  const { model, state, canvas } = fakeModel();
+  startSpin(model);
   advanceTo(420);
   const tiltedIn = state.angle;
   canvas.dispatchEvent(new PointerEvent('pointerdown', { clientX: 100, pointerId: 1 }));
@@ -78,10 +79,34 @@ it('turns the part by hand while it is dragged', () => {
 
 it('stops rendering when stopped', () => {
   const { model, state } = fakeModel();
-  const stop = startSpin(model, document.createElement('canvas'));
+  const stop = startSpin(model);
   advanceTo(100);
   stop();
   const rendered = state.renders;
   advanceTo(200);
   expect(state.renders).toBe(rendered);
+});
+
+it('shows the resting pose at once when held still', () => {
+  const { model, state } = fakeModel();
+  startSpin(model, { still: true });
+  advanceTo(0);
+  expect([state.progress, state.angle]).toEqual([1, 0.35]);
+});
+
+it('does not turn by itself when held still', () => {
+  const { model, state } = fakeModel();
+  startSpin(model, { still: true });
+  advanceTo(0);
+  advanceTo(1000);
+  expect(state.angle).toBe(0.35);
+});
+
+it('still turns by hand when held still', () => {
+  const { model, state, canvas } = fakeModel();
+  startSpin(model, { still: true });
+  canvas.dispatchEvent(new PointerEvent('pointerdown', { clientX: 100, pointerId: 1 }));
+  canvas.dispatchEvent(new PointerEvent('pointermove', { clientX: 150, pointerId: 1 }));
+  advanceTo(20);
+  expect(state.angle).toBeCloseTo(0.35 + 50 * 0.012);
 });

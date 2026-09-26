@@ -7,7 +7,8 @@ import { createStage } from './stage';
 import { buildTurnedMesh } from './turned-mesh';
 
 export type ModelSceneOptions = {
-  canvas: HTMLCanvasElement;
+  /** Receives the scene's canvas; leave out to render offscreen. */
+  host?: HTMLElement;
   part: PartGeometry;
   /** The drawing the model stands in for: same view box, same scale, so the two line up exactly. */
   drawing: Drawing;
@@ -18,6 +19,7 @@ export type ModelSceneOptions = {
 };
 
 export type ModelScene = {
+  canvas: HTMLCanvasElement;
   scene: Scene;
   /** Frame 2: the cut-away model lies exactly on the drawing's section. Frame 3: tilted, whole. */
   pose(frame: 2 | 3, progress?: number): void;
@@ -39,15 +41,14 @@ const MILLED_TILT: Tilt = { x: -0.98, y: 0, rest: -0.55 };
  * and frame 3 tilts the part into view and scales it to fit the main view's region.
  */
 export function createModelScene({
-  canvas,
+  host,
   part,
   drawing,
   size,
   tone,
   preserveDrawingBuffer = false,
 }: ModelSceneOptions): ModelScene {
-  const k = drawing.layers[0].k;
-  const stage = createStage({ canvas, size, viewBox: drawing.viewBox, k, preserveDrawingBuffer });
+  const stage = createStage({ host, size, viewBox: drawing.viewBox, preserveDrawingBuffer });
   const { scene } = stage;
   const [vx, vy, vw, vh] = drawing.viewBox;
 
@@ -118,6 +119,7 @@ export function createModelScene({
   pose(2);
 
   return {
+    canvas: stage.canvas,
     scene,
     pose,
     restAngle: tiltTo.rest,
@@ -137,14 +139,13 @@ export function createModelScene({
 }
 
 /** Renders frame 3 once into an offscreen canvas and returns it as an image (for static visitors). */
-export function renderStill(options: Omit<ModelSceneOptions, 'canvas' | 'preserveDrawingBuffer'>): string {
-  const canvas = document.createElement('canvas');
-  const model = createModelScene({ ...options, canvas, preserveDrawingBuffer: true });
+export function renderStill(options: Omit<ModelSceneOptions, 'host' | 'preserveDrawingBuffer'>): string {
+  const model = createModelScene({ ...options, preserveDrawingBuffer: true });
   try {
     model.pose(3);
     model.spinTo(model.restAngle);
     model.render();
-    return canvas.toDataURL('image/png');
+    return model.canvas.toDataURL('image/png');
   } finally {
     model.dispose();
   }

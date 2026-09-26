@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from 'react';
+import { useEffect, useMemo, useRef, useState, type Dispatch, type SetStateAction } from 'react';
 import { plotLines, revealHatch, showFrame } from '@/drawing/animations';
 import { DrawingSvg } from '@/drawing/DrawingSvg';
 import { drawSubject, viewBoxOf, type Drawing } from '@/drawing/geometry';
@@ -38,7 +38,7 @@ export function HeroMachining({ operations, nominalWidth = 690 }: HeroMachiningP
   const rootRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const canvasHostRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
   const toolGroupRef = useRef<SVGGElement>(null);
   const feedRef = useRef<SVGPathElement>(null);
@@ -58,15 +58,16 @@ export function HeroMachining({ operations, nominalWidth = 690 }: HeroMachiningP
   const viewBox = viewBoxOf(SUBJECT);
   const stageAspect = nominalWidth / (nominalWidth / HERO_ASPECT - STRIP_BAND_PX);
   const k = useDrawingScale(stageRef, viewBox, nominalWidth, stageAspect);
-  const drawing = drawSubject(SUBJECT, k);
+  // The machining effect restarts whenever the drawing changes; keep it stable between scale changes.
+  const drawing = useMemo(() => drawSubject(SUBJECT, k), [k]);
   const finished = operations.length;
 
   useEffect(() => {
-    const [root, stage, svg, canvas, image, toolGroup] = [
+    const [root, stage, svg, host, image, toolGroup] = [
       rootRef.current,
       stageRef.current,
       svgRef.current,
-      canvasRef.current,
+      canvasHostRef.current,
       imageRef.current,
       toolGroupRef.current,
     ];
@@ -78,7 +79,7 @@ export function HeroMachining({ operations, nominalWidth = 690 }: HeroMachiningP
       drillRef.current,
       partRef.current,
     ];
-    if (!root || !stage || !svg || !canvas || !image || !toolGroup) return;
+    if (!root || !stage || !svg || !host || !image || !toolGroup) return;
     if (!feed || !rapid || !turn || !thread || !drill || !part) return;
 
     const overlay: ToolOverlayHandle = { feed, rapid, tools: { turn, thread, drill, part } };
@@ -87,7 +88,7 @@ export function HeroMachining({ operations, nominalWidth = 690 }: HeroMachiningP
     const context: SequenceContext = {
       stage,
       svg,
-      canvas,
+      host,
       image,
       toolGroup,
       overlay,
@@ -108,13 +109,23 @@ export function HeroMachining({ operations, nominalWidth = 690 }: HeroMachiningP
         ? showFinishedStill(context)
         : machinePart({ ...context, setReadoutVisible, readout });
     sequence.catch(() => {
-      // Aborted, or no WebGL: the complete drawing stays.
+      if (controller.signal.aborted) return;
+      // No WebGL, or the context died: free what was built and leave the finished drawing.
+      cleanups
+        .splice(0)
+        .reverse()
+        .forEach((cleanup) => cleanup());
+      resetStage(context);
+      setGated(false);
+      setOperation(finished);
+      setReadoutVisible(false);
     });
 
     return () => {
       controller.abort();
       cleanups.reverse().forEach((cleanup) => cleanup());
       resetStage(context);
+      setReadoutVisible(false);
     };
   }, [drawing, reducedMotion, finished]);
 
@@ -135,10 +146,9 @@ export function HeroMachining({ operations, nominalWidth = 690 }: HeroMachiningP
           alt=""
           className="pointer-events-none absolute inset-0 size-full opacity-0 transition-opacity duration-450 ease-linear"
         />
-        <canvas
-          ref={canvasRef}
-          className="absolute inset-0 size-full opacity-0 transition-opacity duration-450 ease-linear"
-          style={{ touchAction: 'pan-y' }}
+        <div
+          ref={canvasHostRef}
+          className="absolute inset-0 *:block *:size-full *:touch-pan-y *:opacity-0 *:transition-opacity *:duration-450 *:ease-linear"
         />
         <div className="pointer-events-none absolute inset-0 z-2">
           <DrawingSvg ref={svgRef} drawing={drawing}>
@@ -171,7 +181,8 @@ export function HeroMachining({ operations, nominalWidth = 690 }: HeroMachiningP
 type SequenceContext = {
   stage: HTMLDivElement;
   svg: SVGSVGElement;
-  canvas: HTMLCanvasElement;
+  /** Receives the 3D scene's canvas, created per run and removed with the scene. */
+  host: HTMLElement;
   image: HTMLImageElement;
   toolGroup: SVGGElement;
   overlay: ToolOverlayHandle;
@@ -215,7 +226,7 @@ type MachiningContext = SequenceContext & {
 };
 
 async function machinePart(context: MachiningContext) {
-  const { stage, svg, canvas, toolGroup, overlay, drawing, signal, cleanups, finished } = context;
+  const { stage, svg, host, toolGroup, overlay, drawing, signal, cleanups, finished } = context;
   const hatch = mainHatch(svg);
 
   context.setOperation(-1);
@@ -231,11 +242,11 @@ async function machinePart(context: MachiningContext) {
   const { createModelScene, runMachining, startSpin } = await three;
   signal.throwIfAborted();
 
-  const model = createModelScene({ canvas, part: FLANGE, drawing, size: stageSize(stage), tone: 'metal' });
+  const model = createModelScene({ host, part: FLANGE, drawing, size: stageSize(stage), tone: 'metal' });
   cleanups.push(() => model.dispose());
   toolGroup.style.opacity = '1';
-  canvas.style.transition = 'opacity .35s linear';
-  canvas.style.opacity = '1';
+  model.canvas.style.transition = 'opacity .35s linear';
+  model.canvas.style.opacity = '1';
   context.setReadoutVisible(true);
 
   const run = await runMachining({
@@ -262,13 +273,11 @@ async function machinePart(context: MachiningContext) {
   await wait(FINISHED_HOLD_MS, signal);
   run.removeStock();
   showFrame(svg, 3);
-  cleanups.push(startSpin(model, canvas));
+  cleanups.push(startSpin(model));
 }
 
-function resetStage({ svg, canvas, image, toolGroup, overlay }: SequenceContext) {
+function resetStage({ svg, image, toolGroup, overlay }: SequenceContext) {
   svg.getAnimations?.({ subtree: true }).forEach((animation) => animation.cancel());
-  canvas.style.removeProperty('opacity');
-  canvas.style.removeProperty('transition');
   image.style.removeProperty('opacity');
   image.style.removeProperty('transition');
   image.removeAttribute('src');

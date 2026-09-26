@@ -28,7 +28,7 @@ type PartModelProps = {
 export function PartModel({ kind, tone, label, nominalWidth, aspect = 1.3 }: PartModelProps) {
   const boxRef = useRef<HTMLButtonElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const canvasHostRef = useRef<HTMLSpanElement>(null);
   const pointerStart = useRef<{ x: number; y: number } | null>(null);
   const stopSession = useRef<(() => void) | null>(null);
   const [live, setLive] = useState(false);
@@ -38,12 +38,12 @@ export function PartModel({ kind, tone, label, nominalWidth, aspect = 1.3 }: Par
   const k = useDrawingScale(boxRef, viewBoxOf(subject), nominalWidth, aspect);
   const drawing = drawSubject(subject, k);
 
-  // A scene is sized for the drawing it replaced; after a real resize, go back to the drawing.
-  useEffect(() => () => stopSession.current?.(), [k]);
+  // A scene is built for one size and one motion preference; when either changes, back to the drawing.
+  useEffect(() => () => stopSession.current?.(), [k, reducedMotion]);
 
   const start = () => {
-    const [box, svg, canvas] = [boxRef.current, svgRef.current, canvasRef.current];
-    if (!box || !svg || !canvas) return;
+    const [box, svg, host] = [boxRef.current, svgRef.current, canvasHostRef.current];
+    if (!box || !svg || !host) return;
     const controller = new AbortController();
     const cleanups: (() => void)[] = [];
     const stop = () => {
@@ -51,7 +51,6 @@ export function PartModel({ kind, tone, label, nominalWidth, aspect = 1.3 }: Par
       stopSession.current = null;
       controller.abort();
       cleanups.reverse().forEach((cleanup) => cleanup());
-      canvas.style.opacity = '0';
       showFrame(svg, 1);
       release();
       setLive(false);
@@ -59,7 +58,8 @@ export function PartModel({ kind, tone, label, nominalWidth, aspect = 1.3 }: Par
     const release = claimLive(stop);
     stopSession.current = stop;
     setLive(true);
-    playModel({ box, svg, canvas, drawing, kind, tone, signal: controller.signal, cleanups }).catch(() =>
+    const still = reducedMotion;
+    playModel({ box, svg, host, drawing, kind, tone, still, signal: controller.signal, cleanups }).catch(() =>
       stop(),
     );
   };
@@ -78,7 +78,14 @@ export function PartModel({ kind, tone, label, nominalWidth, aspect = 1.3 }: Par
       onClick={(event) => {
         const from = pointerStart.current;
         pointerStart.current = null;
-        if (from && Math.hypot(event.clientX - from.x, event.clientY - from.y) > DRAG_TOLERANCE_PX) return;
+        const pointerClick = event.detail > 0;
+        if (
+          pointerClick &&
+          from &&
+          Math.hypot(event.clientX - from.x, event.clientY - from.y) > DRAG_TOLERANCE_PX
+        ) {
+          return;
+        }
         if (live) stopSession.current?.();
         else start();
       }}
@@ -89,10 +96,9 @@ export function PartModel({ kind, tone, label, nominalWidth, aspect = 1.3 }: Par
       <span className="absolute inset-0">
         <DrawingSvg ref={svgRef} drawing={drawing} />
       </span>
-      <canvas
-        ref={canvasRef}
-        className="absolute inset-0 size-full opacity-0 transition-opacity duration-450 ease-linear"
-        style={{ touchAction: 'pan-y' }}
+      <span
+        ref={canvasHostRef}
+        className="absolute inset-0 *:block *:size-full *:touch-pan-y *:opacity-0 *:transition-opacity *:duration-450 *:ease-linear"
       />
     </button>
   );
@@ -101,15 +107,17 @@ export function PartModel({ kind, tone, label, nominalWidth, aspect = 1.3 }: Par
 type PlayOptions = {
   box: HTMLElement;
   svg: SVGSVGElement;
-  canvas: HTMLCanvasElement;
+  host: HTMLElement;
   drawing: Drawing;
   kind: PartKind;
   tone: Tone;
+  /** Reduced motion: straight to the resting 3D pose, turned only by hand. */
+  still: boolean;
   signal: AbortSignal;
   cleanups: (() => void)[];
 };
 
-async function playModel({ box, svg, canvas, drawing, kind, tone, signal, cleanups }: PlayOptions) {
+async function playModel({ box, svg, host, drawing, kind, tone, still, signal, cleanups }: PlayOptions) {
   showFrame(svg, 1);
   const [{ createModelScene }, { startSpin }] = await Promise.all([
     import('@/three/model-scene'),
@@ -117,7 +125,7 @@ async function playModel({ box, svg, canvas, drawing, kind, tone, signal, cleanu
   ]);
   signal.throwIfAborted();
   const model = createModelScene({
-    canvas,
+    host,
     part: PART_GEOMETRY[kind],
     drawing,
     size: [box.clientWidth, box.clientHeight],
@@ -126,9 +134,9 @@ async function playModel({ box, svg, canvas, drawing, kind, tone, signal, cleanu
   cleanups.push(() => model.dispose());
   model.pose(2);
   model.render();
-  canvas.style.opacity = '1';
+  model.canvas.style.opacity = '1';
   showFrame(svg, 2);
-  await wait(METAL_FRAME_MS, signal);
+  if (!still) await wait(METAL_FRAME_MS, signal);
   showFrame(svg, 3);
-  cleanups.push(startSpin(model, canvas));
+  cleanups.push(startSpin(model, { still }));
 }

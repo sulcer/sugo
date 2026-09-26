@@ -8,6 +8,7 @@ import { useDrawingScale } from '@/drawing/use-drawing-scale';
 import { cn } from '@/lib/cn';
 import { usePrefersReducedMotion } from '@/lib/use-prefers-reduced-motion';
 
+const loadFloor = () => import('@/three/floor-scene');
 const START_DELAY_MS = 600;
 /** Phones keep the static drawing (and their battery). */
 const MIN_VIEWPORT_PX = 460;
@@ -21,7 +22,7 @@ type PartsFloorProps = { className?: string; nominalWidth?: number; aspect?: num
 export function PartsFloor({ className, nominalWidth = 1200, aspect = 3.68 }: PartsFloorProps) {
   const boxRef = useRef<HTMLDivElement>(null);
   const drawingRef = useRef<HTMLDivElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const canvasHostRef = useRef<HTMLDivElement>(null);
   const relaunch = useRef<(() => void) | null>(null);
   const reducedMotion = usePrefersReducedMotion();
   const id = useDrawingId();
@@ -29,8 +30,8 @@ export function PartsFloor({ className, nominalWidth = 1200, aspect = 3.68 }: Pa
   const k = useDrawingScale(boxRef, viewBox, nominalWidth, aspect);
 
   useEffect(() => {
-    const [box, drawing, canvas] = [boxRef.current, drawingRef.current, canvasRef.current];
-    if (!box || !drawing || !canvas || reducedMotion) return;
+    const [box, drawing, host] = [boxRef.current, drawingRef.current, canvasHostRef.current];
+    if (!box || !drawing || !host || reducedMotion) return;
     let visible = false;
     let started = false;
     let disposed = false;
@@ -38,12 +39,12 @@ export function PartsFloor({ className, nominalWidth = 1200, aspect = 3.68 }: Pa
     let stop: (() => void) | undefined;
 
     const launch = async () => {
-      const { startFloor } = await import('@/three/floor-scene');
+      const { startFloor } = await loadFloor();
       if (disposed) return;
       stop?.();
       try {
         stop = startFloor({
-          canvas,
+          host,
           drawing,
           size: [box.clientWidth, box.clientHeight],
           isVisible: () => visible,
@@ -81,7 +82,7 @@ export function PartsFloor({ className, nominalWidth = 1200, aspect = 3.68 }: Pa
   useEffect(() => relaunch.current?.(), [k]);
 
   return (
-    <div ref={boxRef} className={cn('relative', className)}>
+    <div ref={boxRef} className={cn('relative', className)} style={{ aspectRatio: String(aspect) }}>
       <div ref={drawingRef} className="absolute inset-0 transition-opacity duration-300 ease-linear">
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -101,10 +102,10 @@ export function PartsFloor({ className, nominalWidth = 1200, aspect = 3.68 }: Pa
           ))}
         </svg>
       </div>
-      <canvas
-        ref={canvasRef}
+      <div
+        ref={canvasHostRef}
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 size-full opacity-0 transition-opacity duration-400 ease-linear"
+        className="pointer-events-none absolute inset-0 *:block *:size-full *:opacity-0 *:transition-opacity *:duration-400 *:ease-linear"
       />
     </div>
   );
