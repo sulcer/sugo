@@ -1,39 +1,20 @@
 import { expect, test, type Page } from '@playwright/test';
+import { collectErrors } from './helpers';
 import { WEBGL } from './webgl';
 
 test.use({ launchOptions: WEBGL });
 test.skip(({ browserName }) => browserName !== 'chromium', 'the SwiftShader flags are Chromium-only');
 
-/** Sheets the header and footer link to that this branch has not built yet. */
-const NOT_YET_BUILT = [
-];
-
 /** Headless Chromium's software renderer talks about itself; it says nothing about our scenes. */
 const DRIVER_NOISE = /GL Driver Message|GPU stall due to ReadPixels/;
 
-const pathOf = (url: string) => {
-  try {
-    return new URL(url).pathname;
-  } catch {
-    return '';
-  }
-};
-const notYetBuilt = (url: string) => NOT_YET_BUILT.some((sheet) => pathOf(url).endsWith(sheet));
-
-/** Everything the page complains about, minus the noise we knowingly accept. */
+/** Errors of any kind, plus the browser's warnings about WebGL contexts. */
 function watchForTrouble(page: Page): string[] {
-  const trouble: string[] = [];
+  const trouble = collectErrors(page);
   page.on('console', (message) => {
     const text = message.text();
-    if (message.type() === 'error' && !notYetBuilt(message.location().url)) trouble.push(text);
-    if (message.type() === 'warning' && /WebGL|context/i.test(text) && !DRIVER_NOISE.test(text)) {
+    if (message.type() === 'warning' && /WebGL|context/i.test(text) && !DRIVER_NOISE.test(text))
       trouble.push(text);
-    }
-  });
-  page.on('pageerror', (error) => trouble.push(error.message));
-  page.on('response', (response) => {
-    if (response.status() >= 400 && !notYetBuilt(response.url()))
-      trouble.push(`${response.status()} ${response.url()}`);
   });
   return trouble;
 }

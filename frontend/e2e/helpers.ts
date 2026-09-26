@@ -1,9 +1,5 @@
 import type { Page } from '@playwright/test';
 
-/** Sheets whose pages are not built yet; links to them prefetch a 404. Remove each as its page lands. */
-const PENDING_SHEETS: string[] = [];
-const isPendingSheet = (url: string) => PENDING_SHEETS.some((sheet) => new URL(url).pathname.endsWith(sheet));
-
 /** Console errors, uncaught exceptions and failed requests (by URL, instead of the console's bare "Failed to load resource"). */
 export function collectErrors(page: Page) {
   const errors: string[] = [];
@@ -14,7 +10,7 @@ export function collectErrors(page: Page) {
   });
   page.on('pageerror', (error) => errors.push(error.message));
   page.on('response', (response) => {
-    if (response.status() >= 400 && !isPendingSheet(response.url())) {
+    if (response.status() >= 400) {
       errors.push(`${response.status()} ${response.url()}`);
     }
   });
