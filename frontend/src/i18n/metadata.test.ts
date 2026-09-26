@@ -38,3 +38,7 @@ it('builds a page’s generateMetadata from its route and the requested language
     pageMetadata('en', 'park'),
   );
 });
+
+it('brands the home page title itself, where the layout’s title template does not reach', () => {
+  expect(pageMetadata('sl', 'home').title).toEqual({ absolute: 'CNC struženje in rezkanje · SUGO d.o.o.' });
+});

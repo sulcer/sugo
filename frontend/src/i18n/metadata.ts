@@ -14,8 +14,10 @@ const OPEN_GRAPH_LOCALE: Record<Locale, string> = { sl: 'sl_SI', de: 'de_DE', en
 export function pageMetadata(locale: Locale, route: RouteKey): Metadata {
   const { title, description } = SEO[locale][route];
   const url = localePath(locale, route);
+  const branded = `${title} · ${COMPANY.name}`;
   return {
-    title,
+    // The layout's title template applies to child segments only; the home page shares its segment.
+    title: route === 'home' ? { absolute: branded } : title,
     description,
     alternates: { canonical: url, languages: languageAlternates(route) },
     openGraph: {
@@ -23,7 +25,7 @@ export function pageMetadata(locale: Locale, route: RouteKey): Metadata {
       siteName: COMPANY.name,
       locale: OPEN_GRAPH_LOCALE[locale],
       url,
-      title: `${title} · ${COMPANY.name}`,
+      title: branded,
       description,
       images: [{ ...SHARE_CARD, alt: `${COMPANY.name} — ${SEO[locale].home.title}` }],
     },
