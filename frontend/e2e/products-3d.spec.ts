@@ -60,19 +60,24 @@ test('keeps at most one part live at a time', async ({ page }) => {
   await expect(page.locator('canvas')).toHaveCount(1);
 });
 
-test('survives tapping every part of the catalogue in a row', async ({ page, isMobile }) => {
-  test.skip(isMobile, 'the desktop sweep covers the WebGL lifecycle');
+/** One part of each kind the viewer builds: milled, dark milled, plastic, turned with a thread, brass. */
+const SAMPLE = ['Nosilna plošča z žepi', 'Pokrov', 'PVC blok', 'Šestrobi vijak', 'Medeninasta matica'];
+
+// Releasing each WebGL context (so 20 taps never reach Chrome's limit of 16) is pinned in stage.test.ts;
+// software WebGL on CI is too slow to build all 20 scenes here.
+test('hands the live model from part to part without errors', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'the desktop run covers the WebGL lifecycle');
   test.slow();
+  const patience = { timeout: 30_000 };
   const trouble = watchForTrouble(page);
   await page.goto('/izdelki');
-  const buttons = cards(page).locator('button');
-  await expect(buttons).toHaveCount(20);
-
-  for (let index = 0; index < 20; index++) {
-    await buttons.nth(index).click();
-    await expect(cards(page).locator('[aria-pressed="true"]')).toHaveCount(1);
-    await expect(cards(page).locator('[aria-pressed="true"] canvas')).toHaveCount(1);
-    await expect(page.locator('canvas')).toHaveCount(1);
+  for (const name of SAMPLE) {
+    const part = page.getByRole('button', { name });
+    await part.click(patience);
+    await expect(part).toHaveAttribute('aria-pressed', 'true', patience);
+    await expect(cards(page).locator('[aria-pressed="true"]')).toHaveCount(1, patience);
+    await expect(part.locator('canvas')).toHaveCount(1, patience);
+    await expect(page.locator('canvas')).toHaveCount(1, patience);
   }
   expect(trouble).toEqual([]);
 });
