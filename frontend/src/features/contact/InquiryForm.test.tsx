@@ -34,6 +34,11 @@ beforeEach(() => {
 });
 
 describe('InquiryForm', () => {
+  it('posts rather than hanging the visitor on the url', () => {
+    renderForm();
+    expect(sendButton().closest('form')).toHaveAttribute('method', 'post');
+  });
+
   it('names both missing fields when an empty form is submitted', async () => {
     const user = renderForm();
     await user.click(sendButton());

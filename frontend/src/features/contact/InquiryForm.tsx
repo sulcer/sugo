@@ -141,7 +141,8 @@ function Inquiry({
   if (state.status === 'sent') return <SentPanel copy={copy} onAgain={onAgain} />;
 
   return (
-    <form onSubmit={onSubmit} noValidate className={cn(column, 'flex flex-col gap-5')}>
+    // Before hydration a GET would hang the visitor's message and address in the address bar.
+    <form method="post" onSubmit={onSubmit} noValidate className={cn(column, 'flex flex-col gap-5')}>
       {/* Bait: a field no visitor sees and every form-filling bot completes. */}
       <input
         type="text"
