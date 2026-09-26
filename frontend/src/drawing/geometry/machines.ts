@@ -14,8 +14,9 @@ type LatheSpec = {
 /** Vertical machining centre: outline W × H, travels X / Y / Z. Millimetres. */
 type VmcSpec = { type: 'vmc'; W: number; H: number; X: number; Y: number; Z: number };
 
+/** The park, as drawn: outline and work envelope of every machine. The only source of both. */
 // prettier-ignore
-const MACHINES = {
+export const MACHINE_SPECS = {
   m1: { type: 'lathe', W: 2300, H: 1750, L: 500, D: 160, conveyor: true },
   m2: { type: 'lathe', W: 2600, H: 1820, L: 500, D: 160, conveyor: true, slope: true },
   m3: { type: 'lathe', W: 1900, H: 1700, L: 300, D: 160 },
@@ -24,11 +25,12 @@ const MACHINES = {
   m6: { type: 'vmc', W: 2250, H: 2450, X: 600, Y: 400, Z: 300 },
 } as const satisfies Record<string, LatheSpec | VmcSpec>;
 
-export type MachineKind = keyof typeof MACHINES;
-export const MACHINE_KINDS = Object.keys(MACHINES) as MachineKind[];
+export type MachineKind = keyof typeof MACHINE_SPECS;
+export type MachineSpec = (typeof MACHINE_SPECS)[MachineKind];
+export const MACHINE_KINDS = Object.keys(MACHINE_SPECS) as MachineKind[];
 
 export function machineViewBox(kind: MachineKind): ViewBox {
-  const { W, H } = MACHINES[kind];
+  const { W, H } = MACHINE_SPECS[kind];
   const pad = W * 0.04;
   return [-pad, -pad, W + 2 * pad, H + 2 * pad];
 }
@@ -39,7 +41,7 @@ export function machineViewBox(kind: MachineKind): ViewBox {
  * on the site.
  */
 export function drawMachine(kind: MachineKind, k: number): Drawing {
-  const spec: LatheSpec | VmcSpec = MACHINES[kind];
+  const spec: LatheSpec | VmcSpec = MACHINE_SPECS[kind];
   const layer = createLayer(k, 'a');
   layer.thin.push(line(-spec.W * 0.03, spec.H, spec.W * 1.03, spec.H));
   if (spec.type === 'lathe') drawLathe(layer, spec);

@@ -10,8 +10,8 @@ it('numbers the machines across the whole park and labels each type in the local
       name: 'Hyundai Wia L160 LMSA',
       typeLabel: 'CNC-Drehmaschine',
       figures: [
-        ['Ø', '160'],
-        ['L', '500'],
+        ['Ø', 160],
+        ['L', 500],
       ],
     },
     {
@@ -21,8 +21,8 @@ it('numbers the machines across the whole park and labels each type in the local
       name: 'Hyundai Wia SE 2200 LMSC',
       typeLabel: 'CNC-Drehmaschine',
       figures: [
-        ['Ø', '160'],
-        ['L', '500'],
+        ['Ø', 160],
+        ['L', 500],
       ],
     },
     {
@@ -32,8 +32,8 @@ it('numbers the machines across the whole park and labels each type in the local
       name: 'Hyundai Wia E160',
       typeLabel: 'CNC-Drehmaschine',
       figures: [
-        ['Ø', '160'],
-        ['L', '300'],
+        ['Ø', 160],
+        ['L', 300],
       ],
     },
     {
@@ -43,8 +43,8 @@ it('numbers the machines across the whole park and labels each type in the local
       name: 'Doosan Lynx 2100',
       typeLabel: 'CNC-Drehmaschine',
       figures: [
-        ['Ø', '210'],
-        ['L', '500'],
+        ['Ø', 210],
+        ['L', 500],
       ],
     },
     {
@@ -54,9 +54,9 @@ it('numbers the machines across the whole park and labels each type in the local
       name: 'KAFO VMC 510',
       typeLabel: 'Vertikales Bearbeitungszentrum',
       figures: [
-        ['X', '500'],
-        ['Y', '350'],
-        ['Z', '250'],
+        ['X', 500],
+        ['Y', 350],
+        ['Z', 250],
       ],
     },
     {
@@ -66,9 +66,9 @@ it('numbers the machines across the whole park and labels each type in the local
       name: 'VMC-600LR',
       typeLabel: 'Vertikales Bearbeitungszentrum',
       figures: [
-        ['X', '600'],
-        ['Y', '400'],
-        ['Z', '300'],
+        ['X', 600],
+        ['Y', 400],
+        ['Z', 300],
       ],
     },
   ]);

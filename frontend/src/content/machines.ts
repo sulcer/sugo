@@ -1,10 +1,10 @@
-import type { MachineKind } from '@/drawing/geometry/machines';
+import { MACHINE_SPECS, type MachineKind, type MachineSpec } from '@/drawing/geometry/machines';
 import type { Locale, Localized } from '@/i18n/locales';
 
-export type MachineType = 'lathe' | 'vmc';
+export type MachineType = MachineSpec['type'];
 
 /** An axis or diameter symbol and its work envelope figure in millimetres. */
-export type MachineFigure = readonly [axis: string, value: string];
+export type MachineFigure = readonly [axis: 'Ø' | 'L' | 'X' | 'Y' | 'Z', value: number];
 
 export const MACHINE_TYPES: Record<MachineType, Localized<string>> = {
   lathe: { sl: 'CNC stružnica', de: 'CNC-Drehmaschine', en: 'CNC lathe' },
@@ -15,28 +15,38 @@ export const MACHINE_TYPES: Record<MachineType, Localized<string>> = {
   },
 };
 
-type Machine = {
-  kind: MachineKind;
-  type: MachineType;
-  name: string;
-  figures: readonly MachineFigure[];
-};
-
-// prettier-ignore
-export const MACHINES: readonly Machine[] = [
-  { kind: 'm1', type: 'lathe', name: 'Hyundai Wia L160 LMSA', figures: [['Ø', '160'], ['L', '500']] },
-  { kind: 'm2', type: 'lathe', name: 'Hyundai Wia SE 2200 LMSC', figures: [['Ø', '160'], ['L', '500']] },
-  { kind: 'm3', type: 'lathe', name: 'Hyundai Wia E160', figures: [['Ø', '160'], ['L', '300']] },
-  { kind: 'm4', type: 'lathe', name: 'Doosan Lynx 2100', figures: [['Ø', '210'], ['L', '500']] },
-  { kind: 'm5', type: 'vmc', name: 'KAFO VMC 510', figures: [['X', '500'], ['Y', '350'], ['Z', '250']] },
-  { kind: 'm6', type: 'vmc', name: 'VMC-600LR', figures: [['X', '600'], ['Y', '400'], ['Z', '300']] },
+/** The machines in sheet order; their type and figures come from the drawn geometry. */
+export const MACHINES: readonly { kind: MachineKind; name: string }[] = [
+  { kind: 'm1', name: 'Hyundai Wia L160 LMSA' },
+  { kind: 'm2', name: 'Hyundai Wia SE 2200 LMSC' },
+  { kind: 'm3', name: 'Hyundai Wia E160' },
+  { kind: 'm4', name: 'Doosan Lynx 2100' },
+  { kind: 'm5', name: 'KAFO VMC 510' },
+  { kind: 'm6', name: 'VMC-600LR' },
 ];
+
+/** The figures the drawing dimensions: Ø × L for a lathe, the three travels for a centre. */
+// prettier-ignore
+function figuresOf(spec: MachineSpec): MachineFigure[] {
+  return spec.type === 'lathe'
+    ? [['Ø', spec.D], ['L', spec.L]]
+    : [['X', spec.X], ['Y', spec.Y], ['Z', spec.Z]];
+}
 
 /** The machines, numbered across the whole park and labelled in one locale. */
 export function machineRows(locale: Locale) {
-  return MACHINES.map((machine, index) => ({
-    ...machine,
-    no: String(index + 1).padStart(2, '0'),
-    typeLabel: MACHINE_TYPES[machine.type][locale],
-  }));
+  return MACHINES.map(({ kind, name }, index) => {
+    const spec: MachineSpec = MACHINE_SPECS[kind];
+    return {
+      kind,
+      name,
+      type: spec.type,
+      no: String(index + 1).padStart(2, '0'),
+      typeLabel: MACHINE_TYPES[spec.type][locale],
+      figures: figuresOf(spec),
+    };
+  });
 }
+
+/** One machine as the sheet lists it. */
+export type MachineListing = ReturnType<typeof machineRows>[number];
