@@ -66,3 +66,9 @@ test('lets a visitor who accepted take it back from the footer', async ({ page }
   );
   expect([await storedChoice(page), deniedUpdates]).toEqual([null, 1]);
 });
+
+test('asks on the not-found sheet of an unknown dotted url too', async ({ page }) => {
+  await stubAnalytics(page);
+  await page.goto('/pregled.php');
+  await expect(notice(page)).toBeVisible();
+});

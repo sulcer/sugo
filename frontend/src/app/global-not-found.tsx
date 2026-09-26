@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
-import { SiteFooter } from '@/components/footer/SiteFooter';
-import { SiteHeader } from '@/components/header/SiteHeader';
 import { NotFoundMain } from '@/components/NotFoundMain';
+import { SiteShell } from '@/components/SiteShell';
 import { COMPANY } from '@/content/company';
 import { NOT_FOUND } from '@/content/shell';
 import { DEFAULT_LOCALE } from '@/i18n/locales';
@@ -21,11 +20,9 @@ export default function GlobalNotFound() {
   return (
     <html lang={DEFAULT_LOCALE} className={fontVariables}>
       <body>
-        <div className="sheet-page">
-          <SiteHeader locale={DEFAULT_LOCALE} />
+        <SiteShell locale={DEFAULT_LOCALE}>
           <NotFoundMain locale={DEFAULT_LOCALE} />
-          <SiteFooter locale={DEFAULT_LOCALE} />
-        </div>
+        </SiteShell>
       </body>
     </html>
   );

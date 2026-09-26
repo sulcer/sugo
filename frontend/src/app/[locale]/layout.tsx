@@ -1,13 +1,8 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { Analytics } from '@/components/consent/Analytics';
-import { CookieBar } from '@/components/consent/CookieBar';
-import { SiteFooter } from '@/components/footer/SiteFooter';
-import { SiteHeader } from '@/components/header/SiteHeader';
+import { SiteShell } from '@/components/SiteShell';
 import { COMPANY } from '@/content/company';
-import { COOKIE_NOTICE } from '@/content/shell';
 import { LOCALES, isLocale } from '@/i18n/locales';
-import { localePath } from '@/i18n/routes';
 import { fontVariables } from '../fonts';
 import '../globals.css';
 
@@ -30,13 +25,7 @@ export default async function LocaleLayout({ children, params }: LayoutProps<'/[
   return (
     <html lang={locale} className={fontVariables}>
       <body>
-        <div className="sheet-page">
-          <SiteHeader locale={locale} />
-          {children}
-          <SiteFooter locale={locale} />
-        </div>
-        <CookieBar copy={COOKIE_NOTICE[locale]} privacyHref={localePath(locale, 'privacy')} />
-        <Analytics measurementId={process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS ?? ''} />
+        <SiteShell locale={locale}>{children}</SiteShell>
       </body>
     </html>
   );
