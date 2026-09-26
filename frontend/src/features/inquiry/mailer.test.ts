@@ -39,6 +39,24 @@ describe('createSender', () => {
     await expect(createSender()(mail)).rejects.toThrow(/EMAIL/);
   });
 
+  it('refuses to swallow a production inquiry into JSON', async () => {
+    vi.stubEnv('VERCEL_ENV', 'production');
+    vi.stubEnv('MAIL_TRANSPORT', 'json');
+    vi.stubEnv('EMAIL', '');
+    vi.stubEnv('EMAIL_PASS', '');
+    await expect(createSender()(mail)).rejects.toThrow(/EMAIL/);
+  });
+
+  it('really sends in production however the transport is set', async () => {
+    vi.stubEnv('VERCEL_ENV', 'production');
+    vi.stubEnv('MAIL_TRANSPORT', 'json');
+    vi.stubEnv('EMAIL', 'posta@sugo.si');
+    vi.stubEnv('EMAIL_PASS', 'app-password');
+    const sendMail = captureTransport();
+    await createSender()(mail);
+    expect(sendMail).toHaveBeenCalledTimes(1);
+  });
+
   it('swallows the mail into JSON when the transport is stubbed', async () => {
     vi.stubEnv('MAIL_TRANSPORT', 'json');
     vi.stubEnv('EMAIL', '');
