@@ -7,7 +7,6 @@ export async function loadHeroThree() {
   ]);
   return {
     createModelScene: scene.createModelScene,
-    renderStill: scene.renderStill,
     runMachining: machining.runMachining,
     startSpin: spin.startSpin,
   };

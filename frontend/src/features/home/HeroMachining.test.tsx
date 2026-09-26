@@ -4,31 +4,36 @@ import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { HeroMachining } from './HeroMachining';
 
 const three = vi.hoisted(() => ({
-  renderStill: vi.fn(),
+  load: vi.fn(),
   createModelScene: vi.fn(),
   runMachining: vi.fn(),
   startSpin: vi.fn(),
   dispose: vi.fn(),
 }));
 vi.mock('@/three/load-hero', () => ({
-  loadHeroThree: async () => ({
-    renderStill: three.renderStill,
-    createModelScene: three.createModelScene,
-    runMachining: three.runMachining,
-    startSpin: three.startSpin,
-  }),
+  loadHeroThree: async () => {
+    three.load();
+    return {
+      createModelScene: three.createModelScene,
+      runMachining: three.runMachining,
+      startSpin: three.startSpin,
+    };
+  },
 }));
 
 const OPERATIONS = ['Čelo', 'Grobo', 'Fino', 'Navoj', 'Vrtanje', 'Odrez'];
 let reducedMotion = false;
 let motionChanged = () => {};
+let resizeObservers = new Set<() => void>();
+/** Tells every observer the elements changed size (their new size comes from `width`). */
+const resize = () => act(() => resizeObservers.forEach((callback) => callback()));
 let width = 700;
 
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
   reducedMotion = false;
   width = 700;
-  three.renderStill.mockReset().mockReturnValue('data:image/png;base64,AAAA');
+  three.load.mockReset();
   three.createModelScene.mockReset().mockReturnValue({
     canvas: document.createElement('canvas'),
     dispose: three.dispose,
@@ -38,11 +43,17 @@ beforeEach(() => {
   three.runMachining.mockReset().mockReturnValue(new Promise(() => {}));
   three.startSpin.mockReset().mockReturnValue(() => {});
   three.dispose.mockReset();
+  resizeObservers = new Set();
   vi.stubGlobal(
     'ResizeObserver',
     class {
-      observe() {}
-      disconnect() {}
+      constructor(private readonly callback: () => void) {}
+      observe() {
+        resizeObservers.add(this.callback);
+      }
+      disconnect() {
+        resizeObservers.delete(this.callback);
+      }
     },
   );
   vi.stubGlobal('matchMedia', (query: string) => ({
@@ -52,7 +63,11 @@ beforeEach(() => {
     addEventListener: (_: string, onChange: () => void) => (motionChanged = onChange),
     removeEventListener() {},
   }));
-  vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockImplementation(() => width);
+  // Browsers round clientWidth; the box keeps its fraction.
+  vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockImplementation(() => Math.round(width));
+  vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(
+    () => ({ width, height: 450 }) as DOMRect,
+  );
   vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockImplementation(() => 450);
 });
 
@@ -81,16 +96,25 @@ it('turns the part on screens wide enough for it', async () => {
   expect(three.runMachining).toHaveBeenCalledOnce();
 });
 
-it('shows a still of the finished part when the visitor prefers reduced motion', async () => {
+it('never loads the 3D code for visitors who prefer reduced motion', async () => {
   reducedMotion = true;
   await renderHero();
-  expect([three.renderStill.mock.calls.length, three.runMachining.mock.calls.length]).toEqual([1, 0]);
+  await settle(2000);
+  expect(three.load).not.toHaveBeenCalled();
 });
 
-it('shows a still of the finished part on narrow screens', async () => {
+it('never loads the 3D code on heroes too narrow to machine', async () => {
   width = 400;
   await renderHero();
-  expect([three.renderStill.mock.calls.length, three.runMachining.mock.calls.length]).toEqual([1, 0]);
+  await settle(2000);
+  expect(three.load).not.toHaveBeenCalled();
+});
+
+it('offers the finished part as a prerendered image in two sizes', async () => {
+  const { container } = await renderHero();
+  expect(container.querySelector('img')?.getAttribute('srcset')).toBe(
+    '/hero/flange-600.webp 600w, /hero/flange-1200.webp 1200w',
+  );
 });
 
 it('never starts the plotter while hydrating for visitors who prefer reduced motion', async () => {
@@ -113,15 +137,6 @@ it('ticks off every operation in the still', async () => {
   expect(
     [...container.querySelectorAll('[data-op]')].every((cell) => cell.getAttribute('data-op') === 'done'),
   ).toBe(true);
-});
-
-it('keeps the complete drawing when the browser cannot render 3D', async () => {
-  reducedMotion = true;
-  three.renderStill.mockImplementation(() => {
-    throw new Error('WebGL unavailable');
-  });
-  const { container } = await renderHero();
-  expect((container.querySelector('[data-view="a"]') as SVGGElement).style.opacity).not.toBe('0');
 });
 
 const startMachining = async () => {
@@ -179,4 +194,45 @@ it('hides the readout when the visitor turns motion off mid-run', async () => {
 it('is decorative for assistive tech', async () => {
   const { container } = await renderHero();
   expect(container.firstElementChild).toHaveAttribute('aria-hidden', 'true');
+});
+
+it('leaves the half-section to the stylesheet when motion is turned off mid-run', async () => {
+  const { container } = await startMachining();
+  reducedMotion = true;
+  act(() => motionChanged());
+  await settle();
+  expect((container.querySelector('[data-view="a"]') as SVGGElement).style.opacity).toBe('');
+});
+
+it('ticks off every operation when motion is turned off mid-run', async () => {
+  const { container } = await startMachining();
+  reducedMotion = true;
+  act(() => motionChanged());
+  await settle();
+  expect([...container.querySelectorAll('[data-op]')].map((cell) => cell.getAttribute('data-op'))).toEqual(
+    Array(6).fill('done'),
+  );
+});
+
+it('stops machining when the hero narrows past 460 px, even without a redraw', async () => {
+  width = 480;
+  await startMachining();
+  width = 450;
+  resize();
+  await settle();
+  expect(three.dispose).toHaveBeenCalled();
+});
+
+it('shows the still, not machining, for a hero a fraction of a pixel under 460 px', async () => {
+  width = 459.6;
+  await renderHero();
+  await settle(2000);
+  expect(three.load).not.toHaveBeenCalled();
+});
+
+it('asks phones and reduced-motion visitors to fetch the still early, and nobody else', () => {
+  const html = renderToString(<HeroMachining operations={OPERATIONS} />);
+  expect(html.match(/<link rel="preload"[^>]*>/)?.[0]).toContain(
+    'media="(max-width: 493px), (prefers-reduced-motion: reduce)"',
+  );
 });

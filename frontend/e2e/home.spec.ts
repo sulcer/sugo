@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 
 const HEADINGS = {
   '/': 'Kakovostna mehanska obdelava kovin za vaše inovativne ideje',
@@ -72,8 +72,39 @@ test.describe('laid out without scripts', () => {
   }
 });
 
+/** The prerendered still of the finished part is on screen, loaded, and no 3D scene exists. */
+async function expectPrerenderedStill(page: Page) {
+  await page.goto('/');
+  const still = page.locator('main img[srcset*="/hero/flange"]');
+  await expect(still).toBeVisible();
+  await expect.poll(() => still.evaluate((image: HTMLImageElement) => image.naturalWidth)).toBeGreaterThan(0);
+  // Machining would have built its scene 1.25 s after hydration; give it the chance to (wrongly) appear.
+  await page.waitForTimeout(2500);
+  expect(await page.locator('canvas').count()).toBe(0);
+}
+
+test('keeps the still out of the way of a hero that machines', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'a hero wide enough to machine');
+  const fetched: string[] = [];
+  page.on('request', (request) => {
+    if (request.url().includes('/hero/')) fetched.push(request.url());
+  });
+  await page.goto('/');
+  await page.waitForTimeout(1500);
+  expect([await page.locator('main img[srcset*="/hero/flange"]').isVisible(), fetched]).toEqual([false, []]);
+});
+
+test('shows phones the finished part as a prerendered image, without 3D', async ({ page, isMobile }) => {
+  test.skip(!isMobile, 'a hero too narrow to machine');
+  await expectPrerenderedStill(page);
+});
+
 test.describe('for visitors who prefer reduced motion', () => {
   test.use({ reducedMotion: 'reduce' });
+
+  test('shows the finished part as a prerendered image, without 3D', async ({ page }) => {
+    await expectPrerenderedStill(page);
+  });
 
   test('shows the hero part finished, every operation ticked', async ({ page }) => {
     await page.goto('/');
