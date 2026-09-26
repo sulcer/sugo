@@ -1,5 +1,4 @@
 import { expect, test } from '@playwright/test';
-import { scrollThrough } from './helpers';
 
 const HEADINGS = {
   '/': 'Kakovostna mehanska obdelava kovin za vaše inovativne ideje',
@@ -16,7 +15,7 @@ for (const [path, heading] of Object.entries(HEADINGS)) {
 
 test('sends visitors to the drawing upload on the contact page', async ({ page }) => {
   await page.goto('/en');
-  await expect(page.getByRole('link', { name: 'Send your drawing →' })).toHaveAttribute(
+  await expect(page.getByRole('link', { name: 'Send your drawing', exact: true })).toHaveAttribute(
     'href',
     '/en/kontakt#risba',
   );
@@ -27,9 +26,30 @@ test('lists the capabilities as a table', async ({ page }) => {
   await expect(page.getByRole('table', { name: 'Zmogljivosti' }).getByRole('rowheader')).toHaveCount(6);
 });
 
-test('shows the company history', async ({ page }) => {
+test('labels the capability columns in the mono label style, aligned with their values', async ({ page }) => {
+  await page.goto('/');
+  const headers = page.getByRole('table', { name: 'Zmogljivosti' }).getByRole('columnheader');
+  expect(
+    await headers.evaluateAll((cells) =>
+      cells.map((cell) => [getComputedStyle(cell).fontWeight, getComputedStyle(cell).textAlign]),
+    ),
+  ).toEqual([
+    ['500', 'left'],
+    ['500', 'left'],
+  ]);
+});
+
+test('draws the history as a scale on wide sheets and lists it on narrow ones', async ({
+  page,
+  isMobile,
+}) => {
   await page.goto('/en');
-  await expect(page.getByText('SUGO d.o.o. founded').filter({ visible: true }).first()).toBeVisible();
+  const scale = page.locator('[data-tl="label"]', { hasText: 'SUGO d.o.o. founded' });
+  const list = page.getByRole('listitem').filter({ hasText: 'SUGO d.o.o. founded' });
+  const shown = async (locator: typeof list) =>
+    (await locator.isVisible()) &&
+    (await locator.evaluate((element) => element.getBoundingClientRect().width > 1));
+  expect([await shown(scale), await shown(list)]).toEqual(isMobile ? [false, true] : [true, false]);
 });
 
 test.describe('laid out without scripts', () => {
@@ -62,10 +82,20 @@ test.describe('for visitors who prefer reduced motion', () => {
     await expect(page.locator('[data-op="done"]')).toHaveCount(6);
   });
 
-  test('shows the final figures', async ({ page }) => {
+  test('keeps the final figures on screen when the strip comes back into view', async ({ page }) => {
     await page.goto('/en');
-    await scrollThrough(page);
-    await expect(page.getByText('1500+', { exact: true }).first()).toBeVisible();
+    const strip = page.locator('main > section').last();
+    const figures = strip.locator('li > [aria-hidden="true"]');
+    await page.waitForTimeout(700); // past the counters' arming delay
+    await strip.scrollIntoViewIfNeeded();
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await strip.scrollIntoViewIfNeeded();
+    const seen = new Set<string>();
+    for (let sample = 0; sample < 8; sample++) {
+      seen.add((await figures.allTextContents()).join(' '));
+      await page.waitForTimeout(150);
+    }
+    expect([...seen]).toEqual([`${new Date().getFullYear() - 2010} 6 1500+`]);
   });
 });
 

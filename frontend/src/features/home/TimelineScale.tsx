@@ -1,15 +1,12 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { TIMELINE } from '@/content/home';
-import type { Locale } from '@/i18n/locales';
 import { cn } from '@/lib/cn';
 import { prefersReducedMotion } from '@/lib/use-prefers-reduced-motion';
 
 const FIRST_YEAR = 2009;
 const LAST_YEAR = 2027;
 const YEARS = Array.from({ length: LAST_YEAR - FIRST_YEAR + 1 }, (_, index) => FIRST_YEAR + index);
-const EVENT_YEARS = new Set(TIMELINE.map((event) => event.year));
 /** Leaders step up so neighbouring labels clear each other; a flipped label hangs left of its leader. */
 const PLACEMENTS = [
   { level: 0, flip: false },
@@ -27,32 +24,34 @@ const GAP_MS = 250;
 const EVENT_STEP_MS = 520;
 
 const position = (year: number) => ((year - FIRST_YEAR) / (LAST_YEAR - FIRST_YEAR)) * 100;
-const tickHeight = (year: number) => (EVENT_YEARS.has(year) ? 12 : year % 5 === 0 ? 9 : 5);
-
-type TimelineScaleProps = { locale: Locale; className?: string };
+type TimelineEvent = { year: number; label: string };
+type TimelineScaleProps = { events: readonly TimelineEvent[]; className?: string };
 
 /** The company history as graduations on a measuring scale that plots itself when scrolled into view. */
-export function TimelineScale({ locale, className }: TimelineScaleProps) {
+export function TimelineScale({ events, className }: TimelineScaleProps) {
   const rootRef = useRef<HTMLDivElement>(null);
+  const eventYears = new Set(events.map((event) => event.year));
+  const tickHeight = (year: number) => (eventYears.has(year) ? 12 : year % 5 === 0 ? 9 : 5);
 
   useEffect(() => {
     const root = rootRef.current;
     if (!root) return;
     let animations: Animation[] = [];
     let armed = true;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry.isIntersecting) {
-          armed = true;
-          return;
-        }
-        if (!armed || entry.intersectionRatio < VISIBLE_RATIO) return;
-        armed = false;
-        animations.forEach((animation) => animation.cancel());
-        animations = plotTimeline(root);
-      },
-      { threshold: [0, VISIBLE_RATIO] },
-    );
+    const onEntry = (entry: IntersectionObserverEntry) => {
+      if (!entry.isIntersecting) {
+        armed = true;
+        return;
+      }
+      if (!armed || entry.intersectionRatio < VISIBLE_RATIO) return;
+      armed = false;
+      animations.forEach((animation) => animation.cancel());
+      animations = plotTimeline(root);
+    };
+    // Entries queue up while the main thread is busy; replay them in order.
+    const observer = new IntersectionObserver((entries) => entries.forEach(onEntry), {
+      threshold: [0, VISIBLE_RATIO],
+    });
     const arming = setTimeout(() => observer.observe(root), ARM_DELAY_MS);
     return () => {
       clearTimeout(arming);
@@ -63,7 +62,7 @@ export function TimelineScale({ locale, className }: TimelineScaleProps) {
 
   return (
     <div ref={rootRef} aria-hidden="true" className={cn('@container relative h-[300px] w-full', className)}>
-      {TIMELINE.map((event, index) => {
+      {events.map((event, index) => {
         const { level, flip } = PLACEMENTS[index % PLACEMENTS.length];
         const height = 58 + level * 72;
         const x = position(event.year);
@@ -87,7 +86,7 @@ export function TimelineScale({ locale, className }: TimelineScaleProps) {
                 maxWidth: `calc(${flip ? x : 100 - x}cqw + ${LABEL_OVERHANG_PX}px)`,
               }}
             >
-              <span className="text-[14px]/[1.35]">{event.label[locale]}</span>
+              <span className="text-[14px]/[1.35]">{event.label}</span>
             </div>
             <div
               data-tl="leader"
@@ -108,14 +107,14 @@ export function TimelineScale({ locale, className }: TimelineScaleProps) {
           style={{ left: `${position(year)}%`, height: tickHeight(year) }}
         />
       ))}
-      {YEARS.filter((year) => EVENT_YEARS.has(year) || year % 5 === 0).map((year) => (
+      {YEARS.filter((year) => eventYears.has(year) || year % 5 === 0).map((year) => (
         <span
           key={year}
           data-tl="year"
           data-x={position(year)}
           className={cn(
             'absolute bottom-0 -translate-x-1/2 font-mono text-[11px]/none',
-            EVENT_YEARS.has(year) ? 'text-ink' : 'text-grey-light',
+            eventYears.has(year) ? 'text-ink' : 'text-grey-light',
           )}
           style={{ left: `${position(year)}%` }}
         >

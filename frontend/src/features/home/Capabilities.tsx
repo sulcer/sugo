@@ -4,7 +4,7 @@ import { HOME } from '@/content/home';
 import type { Locale } from '@/i18n/locales';
 
 const LABEL_COLUMN = 'min-w-0 flex-[1_1_240px] p-0 text-left';
-const VALUE_COLUMN = 'min-w-0 flex-[1.5_1_300px] p-0';
+const VALUE_COLUMN = 'min-w-0 flex-[1.5_1_300px] p-0 text-left';
 
 /**
  * A real table, laid out as the design's wrapping rows (the value drops below its label on narrow
@@ -22,14 +22,11 @@ export function Capabilities({ locale }: { locale: Locale }) {
       <div className="min-w-0 flex-[2.8_1_560px] pt-[clamp(16px,2.2cqw,28px)] pr-gutter pb-[clamp(48px,5cqw,72px)] pl-4">
         <table role="table" aria-labelledby="capabilities" className="block">
           <thead role="rowgroup" className="block">
-            <tr
-              role="row"
-              className="flex flex-wrap gap-x-6 gap-y-1 border-b-[1.5px] border-ink pb-2.5 label-mono"
-            >
-              <th role="columnheader" scope="col" className={LABEL_COLUMN}>
+            <tr role="row" className="flex flex-wrap gap-x-6 gap-y-1 border-b-[1.5px] border-ink pb-2.5">
+              <th role="columnheader" scope="col" className={cn(LABEL_COLUMN, 'label-mono')}>
                 {copy.columns.item}
               </th>
-              <th role="columnheader" scope="col" className={VALUE_COLUMN}>
+              <th role="columnheader" scope="col" className={cn(VALUE_COLUMN, 'label-mono')}>
                 {copy.columns.value}
               </th>
             </tr>

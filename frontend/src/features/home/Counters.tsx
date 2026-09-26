@@ -1,8 +1,6 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { HOME } from '@/content/home';
-import type { Locale } from '@/i18n/locales';
 import { useCurrentYear } from '@/lib/use-current-year';
 import { prefersReducedMotion } from '@/lib/use-prefers-reduced-motion';
 
@@ -13,16 +11,16 @@ const ARM_DELAY_MS = 600;
 const VISIBLE_RATIO = 0.9;
 const COUNT_MS = 1400;
 
-type CountersProps = { locale: Locale; buildYear: number };
+type CounterLabels = { years: string; machines: string; projects: string };
+type CountersProps = { labels: CounterLabels; buildYear: number };
 
 /**
- * Three figures that count up (ease-out) each time the strip comes fully into view. They render
+ * Three figures that count up (ease-out) each time the strip comes 90 % into view. They render
  * final for the server, for reduced motion and for assistive tech, which never hears the count.
  */
-export function Counters({ locale, buildYear }: CountersProps) {
+export function Counters({ labels, buildYear }: CountersProps) {
   const rootRef = useRef<HTMLUListElement>(null);
   const [progress, setProgress] = useState(1);
-  const labels = HOME[locale].counters;
   const counters = [
     { value: useCurrentYear(buildYear) - FOUNDED, suffix: '', label: labels.years },
     { value: MACHINES, suffix: '', label: labels.machines },
@@ -32,7 +30,7 @@ export function Counters({ locale, buildYear }: CountersProps) {
 
   useEffect(() => {
     const root = rootRef.current;
-    if (!root || prefersReducedMotion()) return;
+    if (!root) return;
     let frame = 0;
     let armed = true;
     const countUp = () => {
@@ -46,20 +44,26 @@ export function Counters({ locale, buildYear }: CountersProps) {
       setProgress(0);
       frame = requestAnimationFrame(step);
     };
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry.isIntersecting) {
-          armed = true;
-          cancelAnimationFrame(frame);
-          setProgress(0);
-          return;
-        }
-        if (!armed || entry.intersectionRatio < VISIBLE_RATIO) return;
-        armed = false;
-        countUp();
-      },
-      { threshold: [0, VISIBLE_RATIO] },
-    );
+    const onEntry = (entry: IntersectionObserverEntry) => {
+      if (prefersReducedMotion()) {
+        cancelAnimationFrame(frame);
+        setProgress(1);
+        return;
+      }
+      if (!entry.isIntersecting) {
+        armed = true;
+        cancelAnimationFrame(frame);
+        setProgress(0);
+        return;
+      }
+      if (!armed || entry.intersectionRatio < VISIBLE_RATIO) return;
+      armed = false;
+      countUp();
+    };
+    // Entries queue up while the main thread is busy; replay them in order.
+    const observer = new IntersectionObserver((entries) => entries.forEach(onEntry), {
+      threshold: [0, VISIBLE_RATIO],
+    });
     const arming = setTimeout(() => observer.observe(root), ARM_DELAY_MS);
     return () => {
       clearTimeout(arming);

@@ -9,7 +9,7 @@ vi.mock('@/three/floor-scene', () => ({
 }));
 
 let reducedMotion = false;
-let scrollIntoView: ReturnType<typeof stubIntersectionObserver>;
+let scrollIntoView: ReturnType<typeof stubIntersectionObserver>['scrollIntoView'];
 
 beforeEach(() => {
   vi.useFakeTimers();
@@ -28,7 +28,7 @@ beforeEach(() => {
     addEventListener() {},
     removeEventListener() {},
   }));
-  scrollIntoView = stubIntersectionObserver();
+  ({ scrollIntoView } = stubIntersectionObserver());
   vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(1200);
   window.innerWidth = 1440;
 });

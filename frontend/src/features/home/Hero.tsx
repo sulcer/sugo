@@ -14,7 +14,10 @@ export function Hero({ locale }: { locale: Locale }) {
         <p className="max-w-[34em] text-[clamp(17px,1.45cqw,20px)]/[1.5] text-pretty text-grey">{copy.sub}</p>
         <div className="flex flex-wrap items-center gap-x-7 gap-y-4 pt-1">
           <Link href={localePath(locale, 'contact', 'risba')} className="button-primary">
-            {copy.cta} <span className="font-mono">→</span>
+            {copy.cta}{' '}
+            <span aria-hidden="true" className="font-mono">
+              →
+            </span>
           </Link>
         </div>
       </div>

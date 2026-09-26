@@ -15,8 +15,5 @@ it.each([
 
 it('sends visitors straight to the drawing upload on the contact page', () => {
   render(<Hero locale="de" />);
-  expect(screen.getByRole('link', { name: 'Zeichnung senden →' })).toHaveAttribute(
-    'href',
-    '/de/kontakt#risba',
-  );
+  expect(screen.getByRole('link', { name: 'Zeichnung senden' })).toHaveAttribute('href', '/de/kontakt#risba');
 });
