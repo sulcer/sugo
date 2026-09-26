@@ -1,14 +1,19 @@
 import { describe, expect, it } from 'vitest';
 import { LOCALES } from '@/i18n/locales';
 import * as company from './company';
+import * as home from './home';
 import * as machinePark from './machine-park';
 import * as machines from './machines';
 import * as shell from './shell';
 
 /** Every `Localized` export, i.e. every object keyed by all three locales. */
-const localizedExports = Object.entries({ ...company, ...machinePark, ...machines, ...shell }).flatMap(
-  ([name, value]) => collectLocalized(name, value),
-);
+const localizedExports = Object.entries({
+  ...company,
+  ...home,
+  ...machinePark,
+  ...machines,
+  ...shell,
+}).flatMap(([name, value]) => collectLocalized(name, value));
 
 function collectLocalized(path: string, value: unknown): [string, Record<string, unknown>][] {
   if (!value || typeof value !== 'object') return [];
