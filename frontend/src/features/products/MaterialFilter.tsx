@@ -13,7 +13,10 @@ type MaterialFilterProps = {
   onChange: (value: Material | 'all') => void;
 };
 
-/** Materials the client has not confirmed yet are not offered, so no filter can come up empty by itself. */
+/**
+ * Materials the client has not confirmed yet are not offered, so no filter can come up empty by itself.
+ * The browser sizes a select border-box; the sheet's content-box default would make it 270 × 46.
+ */
 export function MaterialFilter({ copy, value, onChange }: MaterialFilterProps) {
   return (
     <label className="flex flex-col gap-2.5">
@@ -22,7 +25,7 @@ export function MaterialFilter({ copy, value, onChange }: MaterialFilterProps) {
         value={value}
         onChange={(event) => onChange(event.target.value as Material | 'all')}
         style={{ backgroundImage: ARROW }}
-        className="h-11 min-w-55 cursor-pointer appearance-none border border-ink/50 bg-panel bg-[position:right_12px_center] bg-no-repeat pr-9 pl-3 text-[15px]"
+        className="box-border h-11 min-w-55 cursor-pointer appearance-none border border-ink/50 bg-panel bg-[position:right_12px_center] bg-no-repeat pr-9 pl-3 text-[15px]"
       >
         <option value="all">{copy.allMaterials}</option>
         {availableMaterials(PARTS).map((material) => (
