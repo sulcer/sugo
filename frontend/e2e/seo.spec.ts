@@ -29,3 +29,13 @@ test('a page names its canonical url and its versions in the other languages', a
     ],
   ]);
 });
+
+test('the home page tells search engines who SUGO is', async ({ page }) => {
+  await page.goto('/de');
+  const data = JSON.parse((await page.locator('script[type="application/ld+json"]').textContent()) ?? '{}');
+  expect([data['@type'], data.name, data.address?.addressLocality]).toEqual([
+    'LocalBusiness',
+    'SUGO d.o.o.',
+    'Jakobski Dol',
+  ]);
+});

@@ -1,10 +1,16 @@
 import type { Localized } from '@/i18n/locales';
 
+const POSTAL_CODE = '2222';
+const LOCALITY = 'Jakobski Dol';
+
 export const COMPANY = {
   name: 'SUGO d.o.o.',
   url: 'https://sugo.si',
+  founded: 2010,
   street: 'Spodnji Jakobski Dol 45',
-  city: '2222 Jakobski Dol',
+  postalCode: POSTAL_CODE,
+  locality: LOCALITY,
+  city: `${POSTAL_CODE} ${LOCALITY}`,
   country: { sl: 'Slovenija', de: 'Slowenien', en: 'Slovenia' } satisfies Localized<string>,
   representative: {
     sl: 'Boštjan Golob, direktor',

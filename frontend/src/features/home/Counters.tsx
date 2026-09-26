@@ -1,10 +1,10 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { COMPANY } from '@/content/company';
 import { useCurrentYear } from '@/lib/use-current-year';
 import { prefersReducedMotion } from '@/lib/use-prefers-reduced-motion';
 
-const FOUNDED = 2010;
 const MACHINES = 6;
 const PROJECTS = 1500;
 const ARM_DELAY_MS = 600;
@@ -22,7 +22,7 @@ export function Counters({ labels, buildYear }: CountersProps) {
   const rootRef = useRef<HTMLUListElement>(null);
   const [progress, setProgress] = useState(1);
   const counters = [
-    { value: useCurrentYear(buildYear) - FOUNDED, suffix: '', label: labels.years },
+    { value: useCurrentYear(buildYear) - COMPANY.founded, suffix: '', label: labels.years },
     { value: MACHINES, suffix: '', label: labels.machines },
     { value: PROJECTS, suffix: '+', label: labels.projects },
   ];
