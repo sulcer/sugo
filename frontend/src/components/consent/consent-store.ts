@@ -41,3 +41,31 @@ export function subscribeConsent(listener: () => void) {
     window.removeEventListener('storage', listener);
   };
 }
+
+/** Takes a choice back: analytics stops at once, its cookies go, and the visitor is asked again. */
+export function withdrawConsent() {
+  unstoredConsent = null;
+  try {
+    localStorage.removeItem(CONSENT_KEY);
+  } catch {
+    // Storage blocked: the choice only ever lived in `unstoredConsent`.
+  }
+  window.gtag?.('consent', 'update', { analytics_storage: 'denied' });
+  expireAnalyticsCookies();
+  listeners.forEach((listener) => listener());
+}
+
+/** Google Analytics sets `_ga` and `_ga_<id>` on this host or a parent domain; expire every variant. */
+function expireAnalyticsCookies() {
+  const names = document.cookie
+    .split(';')
+    .map((cookie) => cookie.split('=')[0].trim())
+    .filter((name) => name === '_ga' || name.startsWith('_ga_'));
+  const labels = location.hostname.split('.');
+  const domains = labels.slice(0, -1).map((_, index) => labels.slice(index).join('.'));
+  for (const name of names) {
+    const expired = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
+    document.cookie = expired;
+    for (const domain of domains) document.cookie = `${expired}; domain=.${domain}`;
+  }
+}

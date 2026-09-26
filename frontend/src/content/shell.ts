@@ -77,6 +77,7 @@ export const FOOTER: Localized<{
   taxNumber: string;
   registrationNumber: string;
   privacy: string;
+  cookies: string;
   rights: string;
 }> = {
   sl: {
@@ -85,6 +86,7 @@ export const FOOTER: Localized<{
     taxNumber: 'Davčna številka',
     registrationNumber: 'Matična številka',
     privacy: 'Varovanje osebnih podatkov',
+    cookies: 'Nastavitve piškotkov',
     rights: 'Vse pravice pridržane.',
   },
   de: {
@@ -93,6 +95,7 @@ export const FOOTER: Localized<{
     taxNumber: 'Steuernummer',
     registrationNumber: 'Registernummer',
     privacy: 'Datenschutzerklärung',
+    cookies: 'Cookie-Einstellungen',
     rights: 'Alle Rechte vorbehalten.',
   },
   en: {
@@ -101,6 +104,7 @@ export const FOOTER: Localized<{
     taxNumber: 'Tax number',
     registrationNumber: 'Registration number',
     privacy: 'Privacy policy',
+    cookies: 'Cookie settings',
     rights: 'All rights reserved.',
   },
 };
