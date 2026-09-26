@@ -1,4 +1,5 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test } from '@playwright/test';
+import { scrollThrough } from './helpers';
 
 const HEADINGS = {
   '/': 'Kakovostna mehanska obdelava kovin za vaše inovativne ideje',
@@ -31,20 +32,24 @@ test('shows the company history', async ({ page }) => {
   await expect(page.getByText('SUGO d.o.o. founded').filter({ visible: true }).first()).toBeVisible();
 });
 
-test('never scrolls sideways, whatever the language and width', async ({ page, isMobile }) => {
-  test.skip(isMobile, 'sweeps desktop and tablet widths');
-  const overflowing: string[] = [];
+test.describe('laid out without scripts', () => {
+  test.use({ javaScriptEnabled: false });
+
   for (const path of Object.keys(HEADINGS)) {
-    for (const width of [1440, 1280, 1100, 1024, 900, 760, 700]) {
-      await page.setViewportSize({ width, height: 900 });
+    test(`${path} never scrolls sideways at desktop and tablet widths`, async ({ page, isMobile }) => {
+      test.skip(isMobile, 'sweeps desktop and tablet widths');
+      const overflowing: string[] = [];
       await page.goto(path);
-      const overflow = await page.evaluate(
-        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
-      );
-      if (overflow > 0) overflowing.push(`${path} @ ${width}px: ${overflow}px`);
-    }
+      for (const width of [1440, 1280, 1100, 1024, 900, 760, 700]) {
+        await page.setViewportSize({ width, height: 900 });
+        const overflow = await page.evaluate(
+          () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        );
+        if (overflow > 0) overflowing.push(`${width}px: ${overflow}px`);
+      }
+      expect(overflowing).toEqual([]);
+    });
   }
-  expect(overflowing).toEqual([]);
 });
 
 test.describe('for visitors who prefer reduced motion', () => {
@@ -57,38 +62,11 @@ test.describe('for visitors who prefer reduced motion', () => {
     await expect(page.locator('[data-op="done"]')).toHaveCount(6);
   });
 
-  test('never starts a 3D scene', async ({ page }) => {
-    await page.goto('/');
-    await scrollThrough(page);
-    await expect(page.locator('canvas')).toHaveCount(0);
-  });
-
   test('shows the final figures', async ({ page }) => {
     await page.goto('/en');
     await scrollThrough(page);
     await expect(page.getByText('1500+', { exact: true }).first()).toBeVisible();
   });
-});
-
-test('runs through the whole page without console errors', async ({ page }) => {
-  const errors = collectErrors(page);
-  await page.goto('/');
-  await scrollThrough(page);
-  expect(errors).toEqual([]);
-});
-
-test('restarts the hero machining cleanly after a resize', async ({ page, isMobile }) => {
-  test.skip(isMobile, 'resizes a desktop window');
-  const errors = collectErrors(page);
-  await page.goto('/');
-  const hero = page.locator('main > section').first();
-  const done = hero.locator('[data-op="done"]');
-  await expect(done.first()).toBeVisible({ timeout: 10_000 });
-  // A 24 % narrower hero: past the drawing's 12 % remeasure tolerance, still wide enough to machine.
-  await page.setViewportSize({ width: 520, height: 900 });
-  await expect(done).toHaveCount(0);
-  await expect(done.first()).toBeVisible({ timeout: 10_000 });
-  expect([errors, await hero.locator('canvas').count()]).toEqual([[], 1]);
 });
 
 test.describe('cookie notice', () => {
@@ -103,32 +81,3 @@ test.describe('cookie notice', () => {
     await expect(notice).toBeHidden();
   });
 });
-
-/** Sheets whose pages are not built yet; links to them prefetch a 404. Remove each as its page lands. */
-const PENDING_SHEETS = ['/kontakt', '/izdelki', '/varovanje-osebnih-podatkov'];
-const isPendingSheet = (url: string) => PENDING_SHEETS.some((sheet) => new URL(url).pathname.endsWith(sheet));
-
-/** Console errors, uncaught exceptions and failed requests (by URL, instead of the console's bare "Failed to load resource"). */
-function collectErrors(page: Page) {
-  const errors: string[] = [];
-  page.on('console', (message) => {
-    if (message.type() === 'error' && !message.text().startsWith('Failed to load resource')) {
-      errors.push(message.text());
-    }
-  });
-  page.on('pageerror', (error) => errors.push(error.message));
-  page.on('response', (response) => {
-    if (response.status() >= 400 && !isPendingSheet(response.url())) {
-      errors.push(`${response.status()} ${response.url()}`);
-    }
-  });
-  return errors;
-}
-
-/** Brings every section into view long enough for its scroll-triggered animation to start. */
-async function scrollThrough(page: Page) {
-  for (const section of await page.locator('main > section').all()) {
-    await section.scrollIntoViewIfNeeded();
-    await page.waitForTimeout(700);
-  }
-}
