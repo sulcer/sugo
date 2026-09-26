@@ -1,8 +1,8 @@
 import { SheetMain } from '@/components/SheetMain';
 import { SheetSection } from '@/components/SheetSection';
+import { PrivacyStatement } from '@/features/privacy/PrivacyStatement';
 import { isLocale } from '@/i18n/locales';
 import { metadataFor } from '@/i18n/metadata';
-import { PrivacyStatement } from '@/features/privacy/PrivacyStatement';
 
 export const generateMetadata = metadataFor('privacy');
 
