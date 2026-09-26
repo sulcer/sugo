@@ -1,4 +1,3 @@
-import type { Metadata } from 'next';
 import { SheetMain } from '@/components/SheetMain';
 import { SheetSection } from '@/components/SheetSection';
 import { CONTACT } from '@/content/contact';
@@ -7,13 +6,11 @@ import { Faq } from '@/features/contact/Faq';
 import { InquiryForm } from '@/features/contact/InquiryForm';
 import { Location } from '@/features/contact/Location';
 import { isLocale } from '@/i18n/locales';
+import { metadataFor } from '@/i18n/metadata';
 import { localePath } from '@/i18n/routes';
 import { sendInquiry } from './send-inquiry';
 
-export async function generateMetadata({ params }: PageProps<'/[locale]/kontakt'>): Promise<Metadata> {
-  const { locale } = await params;
-  return { title: isLocale(locale) ? CONTACT[locale].title : 'Kontakt' };
-}
+export const generateMetadata = metadataFor('contact');
 
 export default async function ContactPage({ params }: PageProps<'/[locale]/kontakt'>) {
   const { locale } = await params;
