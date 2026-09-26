@@ -16,7 +16,7 @@ describe('createRateLimiter', () => {
   it('allows a blocked address again once the window has passed', () => {
     const clock = { now: 0 };
     const allow = limiterAt(clock);
-    for (const _ of [1, 2, 3, 4, 5]) allow('1.2.3.4');
+    for (let i = 0; i < 5; i++) allow('1.2.3.4');
     clock.now = WINDOW;
     expect(allow('1.2.3.4')).toBe(true);
   });
@@ -24,14 +24,14 @@ describe('createRateLimiter', () => {
   it('keeps a blocked address blocked just inside the window', () => {
     const clock = { now: 0 };
     const allow = limiterAt(clock);
-    for (const _ of [1, 2, 3, 4, 5]) allow('1.2.3.4');
+    for (let i = 0; i < 5; i++) allow('1.2.3.4');
     clock.now = WINDOW - 1;
     expect(allow('1.2.3.4')).toBe(false);
   });
 
   it('counts each address on its own', () => {
     const allow = limiterAt({ now: 0 });
-    for (const _ of [1, 2, 3, 4, 5]) allow('1.2.3.4');
+    for (let i = 0; i < 5; i++) allow('1.2.3.4');
     expect(allow('5.6.7.8')).toBe(true);
   });
 });

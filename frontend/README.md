@@ -22,4 +22,5 @@ npm run dev        # http://localhost:3000
 | Variable                       | Used for                                                      |
 | ------------------------------ | ------------------------------------------------------------- |
 | `EMAIL`, `EMAIL_PASS`          | Gmail account that sends inquiry e-mails (app password)       |
+| `MAIL_TRANSPORT`               | `json` discards inquiries into JSON instead of sending them   |
 | `NEXT_PUBLIC_GOOGLE_ANALYTICS` | GA4 measurement id; analytics loads only after cookie consent |
