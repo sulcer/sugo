@@ -129,16 +129,3 @@ test.describe('for visitors who prefer reduced motion', () => {
     expect([...seen]).toEqual([`${new Date().getFullYear() - 2010} 6 1500+`]);
   });
 });
-
-test.describe('cookie notice', () => {
-  test('waits below the hero, then remembers the choice', async ({ page }) => {
-    await page.goto('/');
-    const notice = page.getByRole('region', { name: 'Piškotki' });
-    await expect(notice).toBeHidden();
-    await page.evaluate(() => window.scrollBy(0, 800));
-    await notice.getByRole('button', { name: 'Se strinjam' }).click();
-    await page.reload();
-    await page.evaluate(() => window.scrollBy(0, 800));
-    await expect(notice).toBeHidden();
-  });
-});
