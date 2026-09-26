@@ -47,9 +47,10 @@ function Inquiry({ locale, privacyHref, action, onAgain }: InquiryFormProps & { 
   const [tried, setTried] = useState(false);
   const startedAt = useRef(0);
 
-  // The server's spam guard reads the time the visitor had the form in front of them, not the build.
+  // The server's spam guard reads how long the visitor had the form in front of them. It is measured
+  // here, on one monotonic clock, so a machine whose wall clock is off still gets its inquiry sent.
   useEffect(() => {
-    startedAt.current = Date.now();
+    startedAt.current = performance.now();
   }, []);
 
   const emailError = tried && !LOOKS_LIKE_EMAIL.test(email);
@@ -72,7 +73,7 @@ function Inquiry({ locale, privacyHref, action, onAgain }: InquiryFormProps & { 
     if (!LOOKS_LIKE_EMAIL.test(email) || !consent || fileProblem) return;
     const data = new FormData(event.currentTarget);
     data.set('locale', locale);
-    data.set('startedAt', String(startedAt.current));
+    data.set('elapsedMs', String(performance.now() - startedAt.current));
     for (const file of files) data.append('files', file);
     startTransition(() => submit(data));
   };

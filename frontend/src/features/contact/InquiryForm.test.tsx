@@ -105,6 +105,13 @@ describe('InquiryForm', () => {
     expect(consent).toBeChecked();
   });
 
+  it('reports how long the visitor had the form open, not when they opened it', async () => {
+    const user = renderForm();
+    await fillAndSend(user);
+    const form = action.mock.calls[0]?.[1] as FormData;
+    expect([Number.isFinite(Number(form.get('elapsedMs'))), form.has('startedAt')]).toEqual([true, false]);
+  });
+
   it('carries the fields, the drawing and the language to the action', async () => {
     const user = renderForm();
     await user.upload(filePicker(), drawing('risba.pdf'));

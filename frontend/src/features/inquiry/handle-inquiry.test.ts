@@ -17,7 +17,7 @@ function formOf(fields: Record<string, string> = {}, files: File[] = []) {
     consent: 'on',
     locale: 'sl',
     website: '',
-    startedAt: '0',
+    elapsedMs: '10000',
     ...fields,
   };
   for (const [name, value] of Object.entries(values)) form.set(name, value);
@@ -30,7 +30,7 @@ let deps: InquiryDeps;
 
 beforeEach(() => {
   send = vi.fn<(mail: Mail) => Promise<void>>().mockResolvedValue(undefined);
-  deps = { now: 10_000, ip: '1.2.3.4', allow: () => true, send };
+  deps = { ip: '1.2.3.4', allow: () => true, send };
 });
 
 describe('handleInquiry', () => {
@@ -72,15 +72,42 @@ describe('handleInquiry', () => {
   });
 
   it('sends nothing when the form was filled in a second', async () => {
-    await handleInquiry(formOf({ startedAt: '9000' }), deps);
+    await handleInquiry(formOf({ elapsedMs: '1000' }), deps);
     expect(send).not.toHaveBeenCalled();
   });
 
-  it('sends nothing when the form has no start time', async () => {
+  it('sends nothing when the form has no fill time', async () => {
     const form = formOf();
-    form.delete('startedAt');
+    form.delete('elapsedMs');
     await handleInquiry(form, deps);
     expect(send).not.toHaveBeenCalled();
+  });
+
+  it('sends an inquiry from a browser whose clock is minutes out', async () => {
+    const form = formOf({ elapsedMs: '4000' });
+    form.set('startedAt', String(Date.now() + 300_000));
+    await handleInquiry(form, deps);
+    expect(send).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    ['a filled honeypot', { website: 'https://spam.test' }, 'inquiry: dropped (honeypot)'],
+    ['an instant submission', { elapsedMs: '1000' }, 'inquiry: dropped (too fast)'],
+    ['a submission without timing', { elapsedMs: '' }, 'inquiry: dropped (no timing)'],
+  ])('logs %s without any of the form', async (_case, fields, expected) => {
+    const info = vi.spyOn(console, 'info').mockImplementation(() => {});
+    await handleInquiry(formOf(fields), deps);
+    const logged = info.mock.calls.flat();
+    info.mockRestore();
+    expect(logged).toEqual([expected]);
+  });
+
+  it('rejects an executable hidden behind a real drawing', async () => {
+    const files = [drawing('risba.pdf', PDF), drawing('model.stp', 'MZ\u0000')];
+    expect(await handleInquiry(formOf({}, files), deps)).toEqual({
+      status: 'error',
+      reason: 'fileType',
+    });
   });
 
   it('rejects an address that is not an e-mail', async () => {

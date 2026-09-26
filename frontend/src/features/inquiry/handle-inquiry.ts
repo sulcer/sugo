@@ -15,7 +15,6 @@ export type Mail = {
 };
 
 export type InquiryDeps = {
-  now: number;
   ip: string;
   allow: (ip: string) => boolean;
   send: (mail: Mail) => Promise<void>;
@@ -33,11 +32,18 @@ const NO_SUBJECT = '(brez zadeve)';
  * mail transport handed in. The browser has already checked all of this; none of it is trusted here.
  */
 export async function handleInquiry(form: FormData, deps: InquiryDeps): Promise<InquiryState> {
-  // A bot that fills the hidden field or submits instantly is told the same thing as a visitor.
-  // `|| NaN` so a missing or empty start time reads as suspicious rather than as the epoch.
-  const started = Number(form.get('startedAt') || NaN);
-  if (form.get('website') || !Number.isFinite(started) || deps.now - started < INQUIRY_LIMITS.minFillMs)
+  // A bot that fills the hidden field or submits instantly is told the same thing as a visitor, and
+  // the drop is logged — without any of the form — so it is visible when a real inquiry goes missing.
+  const drop = (reason: string): InquiryState => {
+    console.info(`inquiry: dropped (${reason})`);
     return { status: 'sent' };
+  };
+  if (form.get('website')) return drop('honeypot');
+  // The browser times itself on one monotonic clock; comparing its wall clock to ours would drop
+  // real inquiries from every machine whose time is off. `|| NaN` catches a missing or empty field.
+  const elapsed = Number(form.get('elapsedMs') || NaN);
+  if (!Number.isFinite(elapsed)) return drop('no timing');
+  if (elapsed < INQUIRY_LIMITS.minFillMs) return drop('too fast');
 
   const parsed = inquirySchema.safeParse({
     email: form.get('email'),
