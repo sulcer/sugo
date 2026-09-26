@@ -2,6 +2,7 @@ import type { Localized } from '@/i18n/locales';
 
 export const COMPANY = {
   name: 'SUGO d.o.o.',
+  url: 'https://sugo.si',
   street: 'Spodnji Jakobski Dol 45',
   city: '2222 Jakobski Dol',
   country: { sl: 'Slovenija', de: 'Slowenien', en: 'Slovenia' } satisfies Localized<string>,

@@ -5,6 +5,7 @@ import { Analytics } from '@/components/consent/Analytics';
 import { CookieBar } from '@/components/consent/CookieBar';
 import { SiteFooter } from '@/components/footer/SiteFooter';
 import { SiteHeader } from '@/components/header/SiteHeader';
+import { COMPANY } from '@/content/company';
 import { COOKIE_NOTICE } from '@/content/shell';
 import { LOCALES, isLocale } from '@/i18n/locales';
 import { localePath } from '@/i18n/routes';
@@ -27,7 +28,7 @@ const mono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://sugo.si'),
+  metadataBase: new URL(COMPANY.url),
   title: { default: 'SUGO d.o.o.', template: '%s · SUGO d.o.o.' },
 };
 
