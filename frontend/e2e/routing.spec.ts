@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { NOT_FOUND } from '../src/content/shell';
 import { collectErrors } from './helpers';
 
 test('slovenian home is served at / without redirecting', async ({ page }) => {
@@ -49,4 +50,13 @@ test('prefetches the Slovenian sheets without asking for pages that do not exist
   await expect(page).toHaveURL(/\/$/);
   await page.waitForTimeout(1500);
   expect(errors).toEqual([]);
+});
+
+test('an unknown url the proxy never sees still answers with the Slovenian sheet', async ({ page }) => {
+  const response = await page.goto('/pregled.php');
+  expect([
+    response?.status(),
+    await page.locator('html').getAttribute('lang'),
+    await page.getByRole('heading', { level: 1 }).textContent(),
+  ]).toEqual([404, 'sl', NOT_FOUND.sl.title]);
 });
