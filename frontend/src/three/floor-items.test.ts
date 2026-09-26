@@ -21,7 +21,11 @@ it('turns round parts drawn end-on to face the camera', () => {
 it('keeps every model flat on the drawing before the tilt starts', () => {
   const { items } = buildFloorItems();
   poseFloorItems(items, 0, 0);
-  const angles = items.flatMap((item) => [item.tilt.rotation.x, item.tilt.rotation.y, item.spin.rotation[item.axis]]);
+  const angles = items.flatMap((item) => [
+    item.tilt.rotation.x,
+    item.tilt.rotation.y,
+    item.spin.rotation[item.axis],
+  ]);
   expect(angles.filter((angle) => angle !== 0)).toEqual([]);
 });
 

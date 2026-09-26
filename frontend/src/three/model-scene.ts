@@ -1,22 +1,9 @@
-import {
-  ACESFilmicToneMapping,
-  AmbientLight,
-  Box3,
-  DirectionalLight,
-  Group,
-  LineSegments,
-  Mesh,
-  OrthographicCamera,
-  Scene,
-  SRGBColorSpace,
-  Vector3,
-  WebGLRenderer,
-} from 'three';
+import { Box3, Group, Vector3, type Scene } from 'three';
 import type { Drawing } from '@/drawing/geometry';
 import type { PartGeometry } from '@/drawing/geometry/parts-table';
-import { createStudioEnvironment } from './environment';
 import { createMaterials, disposeMaterials, type Tone } from './materials';
 import { buildMilledMesh } from './milled-mesh';
+import { createStage } from './stage';
 import { buildTurnedMesh } from './turned-mesh';
 
 export type ModelSceneOptions = {
@@ -59,28 +46,10 @@ export function createModelScene({
   tone,
   preserveDrawingBuffer = false,
 }: ModelSceneOptions): ModelScene {
-  const [width, height] = size;
   const k = drawing.layers[0].k;
-  const renderer = new WebGLRenderer({ canvas, antialias: true, alpha: true, preserveDrawingBuffer });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-  renderer.setSize(width, height, false);
-  renderer.outputColorSpace = SRGBColorSpace;
-  renderer.toneMapping = ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.05;
-
-  const scene = new Scene();
-  scene.environment = createStudioEnvironment(renderer);
-  scene.add(new AmbientLight(0xffffff, 0.2));
-  const keyLight = new DirectionalLight(0xffffff, 0.9);
-  keyLight.position.set(-3, 5, 6);
-  scene.add(keyLight);
-
+  const stage = createStage({ canvas, size, viewBox: drawing.viewBox, k, preserveDrawingBuffer });
+  const { scene } = stage;
   const [vx, vy, vw, vh] = drawing.viewBox;
-  const [cx, cy] = [vx + vw / 2, vy + vh / 2];
-  const [halfW, halfH] = [(width * k) / 2, (height * k) / 2];
-  const camera = new OrthographicCamera(-halfW, halfW, halfH, -halfH, -2000, 2000);
-  camera.position.set(cx, -cy, 500);
-  camera.lookAt(cx, -cy, 0);
 
   const materials = createMaterials(tone);
   const tilt = new Group();
@@ -159,15 +128,10 @@ export function createModelScene({
       whole.visible = false;
       if (cutAway) cutAway.visible = false;
     },
-    render: () => renderer.render(scene, camera),
+    render: stage.render,
     dispose: () => {
-      scene.traverse((object) => {
-        if (object instanceof Mesh || object instanceof LineSegments) object.geometry.dispose();
-      });
+      stage.dispose();
       disposeMaterials(materials);
-      scene.environment?.dispose();
-      renderer.dispose();
-      renderer.forceContextLoss();
     },
   };
 }
