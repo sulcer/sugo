@@ -56,3 +56,15 @@ export function revealHatch(svg: SVGSVGElement, durationMs: number) {
   clip.setAttribute('width', '0');
   requestAnimationFrame(step);
 }
+
+/**
+ * Drawing → metal → model sequence: 1 = the drawing, 2 = hatching gone (metal fills the section),
+ * 3 = main view hidden (the 3D model stands in for it).
+ */
+export function showFrame(svg: SVGSVGElement, frame: 1 | 2 | 3) {
+  const main = svg.querySelector<SVGGElement>('[data-view="a"]');
+  if (!main) return;
+  main.style.opacity = frame === 3 ? '0' : '1';
+  const hatch = main.querySelector<SVGGElement>('[data-hatch]');
+  if (hatch) hatch.style.opacity = frame >= 2 ? '0' : '1';
+}

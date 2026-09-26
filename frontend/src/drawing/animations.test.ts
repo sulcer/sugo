@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { plotLines, revealHatch } from './animations';
+import { plotLines, revealHatch, showFrame } from './animations';
 
 type FakeAnimation = {
   keyframes: Keyframe[];
@@ -127,5 +127,35 @@ describe('revealHatch', () => {
     advanceTo(250);
     advanceTo(500);
     expect(clipWidth(svg)).toBe('200');
+  });
+});
+
+describe('showFrame', () => {
+  const drawing = () => {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.innerHTML = '<g data-view="a"><g data-hatch=""></g></g><g data-view="b"></g>';
+    return svg;
+  };
+  const opacities = (svg: SVGSVGElement) => [
+    (svg.querySelector('[data-view="a"]') as SVGGElement).style.opacity,
+    (svg.querySelector('[data-hatch]') as SVGGElement).style.opacity,
+  ];
+
+  it('shows the whole drawing in frame 1', () => {
+    const svg = drawing();
+    showFrame(svg, 1);
+    expect(opacities(svg)).toEqual(['1', '1']);
+  });
+
+  it('drops the hatching in frame 2 while the metal fills the section', () => {
+    const svg = drawing();
+    showFrame(svg, 2);
+    expect(opacities(svg)).toEqual(['1', '0']);
+  });
+
+  it('hides the main view in frame 3 while the model stands in for it', () => {
+    const svg = drawing();
+    showFrame(svg, 3);
+    expect(opacities(svg)).toEqual(['0', '0']);
   });
 });
