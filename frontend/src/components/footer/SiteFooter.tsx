@@ -55,7 +55,7 @@ export function SiteFooter({ locale }: { locale: Locale }) {
         </div>
         <div className="flex flex-[1_1_100%] flex-wrap items-baseline justify-between gap-x-6 gap-y-2 bg-paper px-5 py-3 font-mono text-xs leading-[1.4] text-grey">
           <span>
-            © <CurrentYear /> {COMPANY.name} {copy.rights}
+            © <CurrentYear buildYear={new Date().getFullYear()} /> {COMPANY.name} {copy.rights}
           </span>
           <Link
             href={localePath(locale, 'privacy')}
