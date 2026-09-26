@@ -25,6 +25,7 @@ it('holds a quick visitor’s inquiry until the spam guard’s minimum has passe
 });
 
 it('then sends it, timed so the server keeps it', async () => {
-  await act(() => vi.advanceTimersByTimeAsync(INQUIRY_LIMITS.minFillMs));
+  // The minimum plus the form's small safety margin.
+  await act(() => vi.advanceTimersByTimeAsync(INQUIRY_LIMITS.minFillMs + 50));
   expect(Number(action.mock.calls[0]?.[1].get('elapsedMs'))).toBeGreaterThanOrEqual(INQUIRY_LIMITS.minFillMs);
 });

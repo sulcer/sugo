@@ -82,9 +82,13 @@ function Inquiry({
   const deliver = async (previous: InquiryState, form: FormData): Promise<InquiryState> => {
     // The server drops anything sent faster than a person fills the form. A visitor who autofills and
     // sends at once is a person: hold the inquiry for the rest of that time instead of losing it.
-    const remaining = INQUIRY_LIMITS.minFillMs - (performance.now() - startedAt.current);
-    if (remaining > 0) await new Promise((resolve) => setTimeout(resolve, remaining));
-    form.set('elapsedMs', String(performance.now() - startedAt.current));
+    // Measured again after each wait: coarse clocks and early timers can leave it a hair short.
+    let elapsed = performance.now() - startedAt.current;
+    while (elapsed < INQUIRY_LIMITS.minFillMs) {
+      await new Promise((resolve) => setTimeout(resolve, INQUIRY_LIMITS.minFillMs - elapsed + 20));
+      elapsed = performance.now() - startedAt.current;
+    }
+    form.set('elapsedMs', String(Math.ceil(elapsed)));
     // A dropped connection or a deployment between load and submit rejects the action. Nothing above
     // this form catches that, so the page would die and take the visitor's message with it.
     try {
