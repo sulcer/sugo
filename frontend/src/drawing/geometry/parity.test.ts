@@ -7,6 +7,7 @@
 import fixtures from '../__fixtures__/design-geometry.json';
 import type { Drawing } from './layer';
 import { PART_GEOMETRY, type PartKind } from './parts-table';
+import { drawMilled } from './milled';
 import { drawTurned } from './turned';
 
 type DesignText = { x: number; y: number; s: number; str: string; a?: string; acc?: number; grey?: number };
@@ -74,6 +75,22 @@ describe.each(kinds('turned'))('turned part %s', (kind) => {
     for (const k of fixtures.k) {
       expect(toDesignShape(drawTurned(part, k, views))).toEqual(partFixtures[kind][views][String(k)]);
     }
+  });
+});
+
+describe.each(kinds('milled'))('milled part %s', (kind) => {
+  it('matches the design engine at every scale', () => {
+    const part = PART_GEOMETRY[kind];
+    if (part.type !== 'milled') throw new Error(`${kind} is not milled`);
+    for (const k of fixtures.k) {
+      expect(toDesignShape(drawMilled(part, k))).toEqual(partFixtures[kind].front[String(k)]);
+    }
+  });
+
+  it('matches the design engine without the section-plane marks', () => {
+    const part = PART_GEOMETRY[kind];
+    if (part.type !== 'milled') throw new Error(`${kind} is not milled`);
+    expect(toDesignShape(drawMilled(part, 1, false))).toEqual(partFixtures[kind].noCut);
   });
 });
 
