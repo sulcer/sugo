@@ -12,6 +12,7 @@ export function createRateLimiter({
   const hits = new Map<string, number[]>();
   return function allow(key: string): boolean {
     const t = now();
+    // Housekeeping only: a pruned key and a stale one answer identically, so nothing tests this line.
     if (hits.size > 1000)
       for (const [k, times] of hits) if (times.every((at) => t - at >= windowMs)) hits.delete(k);
     const recent = (hits.get(key) ?? []).filter((at) => t - at < windowMs);
