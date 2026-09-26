@@ -8,7 +8,7 @@ it('describes SUGO to search engines as a local business, in the page’s langua
     name: 'SUGO d.o.o.',
     description:
       'Family business for CNC turning and milling to your drawing, from single parts to series production. Diameters from 3 to 65 mm.',
-    url: 'https://sugo.si',
+    url: 'https://www.sugo.si',
     email: 'cncgolob@gmail.com',
     telephone: ['+38631876138', '+38631557929'],
     address: {

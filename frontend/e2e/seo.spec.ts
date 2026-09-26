@@ -8,7 +8,9 @@ test('the sitemap lists every page in every language with its alternates', async
 });
 
 test('robots.txt points crawlers to the sitemap', async ({ request }) => {
-  expect(await (await request.get('/robots.txt')).text()).toContain('Sitemap: https://sugo.si/sitemap.xml');
+  expect(await (await request.get('/robots.txt')).text()).toContain(
+    'Sitemap: https://www.sugo.si/sitemap.xml',
+  );
 });
 
 test('a page names its canonical url and its versions in the other languages', async ({ page }) => {
@@ -22,12 +24,12 @@ test('a page names its canonical url and its versions in the other languages', a
         links.map((link) => `${link.getAttribute('hreflang')} ${link.getAttribute('href')}`),
       ),
   ]).toEqual([
-    'https://sugo.si/de/strojni-park',
+    'https://www.sugo.si/de/strojni-park',
     [
-      'sl https://sugo.si/strojni-park',
-      'de https://sugo.si/de/strojni-park',
-      'en https://sugo.si/en/strojni-park',
-      'x-default https://sugo.si/strojni-park',
+      'sl https://www.sugo.si/strojni-park',
+      'de https://www.sugo.si/de/strojni-park',
+      'en https://www.sugo.si/en/strojni-park',
+      'x-default https://www.sugo.si/strojni-park',
     ],
   ]);
 });
@@ -42,7 +44,7 @@ test('every page shares a link preview card', async ({ page }) => {
   await page.goto('/en/strojni-park');
   const meta = (property: string) => page.locator(`meta[property="${property}"]`).getAttribute('content');
   expect([await meta('og:image'), await meta('og:image:width'), await meta('og:image:height')]).toEqual([
-    'https://sugo.si/og-en.png',
+    'https://www.sugo.si/og-en.png',
     '1200',
     '630',
   ]);
