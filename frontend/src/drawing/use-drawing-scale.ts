@@ -5,14 +5,14 @@ type Size = { width: number; height: number; measured: boolean };
 
 /**
  * Viewbox units per screen pixel for a drawing filling `ref`. Starts from a nominal width so the
- * server render is already close; adopts the first real measurement, then — like the design —
+ * server render is already close; measures before the first client paint, then — like the design —
  * redraws only when the width moves more than 12 % or the height more than 30 px.
  */
 export function useDrawingScale(
   ref: RefObject<HTMLElement | null>,
   viewBox: ViewBox,
   nominalWidth: number,
-  aspect: number = viewBox[2] / viewBox[3],
+  aspect: number,
 ): number {
   const [size, setSize] = useState<Size>({
     width: nominalWidth,
@@ -35,6 +35,7 @@ export function useDrawingScale(
           : { width, height, measured: true },
       );
     };
+    measure();
     const observer = new ResizeObserver(measure);
     observer.observe(element);
     return () => observer.disconnect();

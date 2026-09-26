@@ -9,6 +9,7 @@ let notify: () => void = () => {};
 const size = { width: 0, height: 0 };
 
 beforeEach(() => {
+  Object.assign(size, { width: 0, height: 0 });
   vi.stubGlobal(
     'ResizeObserver',
     class {
@@ -30,7 +31,7 @@ afterEach(() => {
 
 function Probe({ nominalWidth }: { nominalWidth: number }) {
   const ref = useRef<HTMLDivElement>(null);
-  const k = useDrawingScale(ref, VIEW_BOX, nominalWidth);
+  const k = useDrawingScale(ref, VIEW_BOX, nominalWidth, 2);
   return <div ref={ref} data-testid="probe" data-k={k} />;
 }
 
@@ -78,4 +79,10 @@ it('treats a collapsed height as the drawing aspect instead of dividing by zero'
   const { container } = render(<Probe nominalWidth={300} />);
   resizeTo(300, 0);
   expect(kOf(container)).toBe(2);
+});
+
+it('measures the box as soon as it mounts, before the first paint', () => {
+  Object.assign(size, { width: 150, height: 75 });
+  const { container } = render(<Probe nominalWidth={300} />);
+  expect(kOf(container)).toBe(4);
 });
