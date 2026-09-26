@@ -32,6 +32,18 @@ describe('looksLikeDrawing', () => {
     expect(looksLikeDrawing('risba.dxf', new Uint8Array(0))).toBe(false);
   });
 
+  it('rejects a web page renamed to a DXF', () => {
+    expect(looksLikeDrawing('risba.dxf', bytes('<!DOCTYPE html>\n<html lang="sl">'))).toBe(false);
+  });
+
+  it('rejects a drawing exchanged for an SVG', () => {
+    expect(looksLikeDrawing('risba.dxf', bytes('<svg xmlns="http://www.w3.org/2000/svg">'))).toBe(false);
+  });
+
+  it('accepts a DXF that opens with a comment group', () => {
+    expect(looksLikeDrawing('risba.dxf', bytes('999\nmade by SUGO\n  0\nSECTION\n'))).toBe(true);
+  });
+
   it('rejects a binary blob renamed to a DXF', () => {
     expect(looksLikeDrawing('risba.dxf', new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x00, 0x1a]))).toBe(false);
   });
