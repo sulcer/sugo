@@ -22,5 +22,7 @@ export default defineConfig({
     url: `http://localhost:${PORT}`,
     reuseExistingServer: !process.env.CI,
     timeout: 240_000,
+    // Inquiries must never leave the machine during a test run.
+    env: { MAIL_TRANSPORT: 'json' },
   },
 });

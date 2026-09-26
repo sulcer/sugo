@@ -14,5 +14,3 @@ export const inquirySchema = z.object({
   consent: z.literal('on'),
   locale: z.enum(LOCALES),
 });
-
-export type Inquiry = z.infer<typeof inquirySchema>;
