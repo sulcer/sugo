@@ -1,5 +1,6 @@
 import { act, render } from '@testing-library/react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
+import { stubIntersectionObserver } from '@/test/stub-intersection-observer';
 import { PartsFloor } from './PartsFloor';
 
 const floor = vi.hoisted(() => ({ start: vi.fn(), stop: vi.fn() }));
@@ -8,7 +9,7 @@ vi.mock('@/three/floor-scene', () => ({
 }));
 
 let reducedMotion = false;
-let observe: (entry: Partial<IntersectionObserverEntry>) => void = () => {};
+let scrollIntoView: ReturnType<typeof stubIntersectionObserver>;
 
 beforeEach(() => {
   vi.useFakeTimers();
@@ -27,17 +28,7 @@ beforeEach(() => {
     addEventListener() {},
     removeEventListener() {},
   }));
-  vi.stubGlobal(
-    'IntersectionObserver',
-    class {
-      constructor(callback: IntersectionObserverCallback) {
-        observe = (entry) =>
-          callback([entry as IntersectionObserverEntry], this as unknown as IntersectionObserver);
-      }
-      observe() {}
-      disconnect() {}
-    },
-  );
+  scrollIntoView = stubIntersectionObserver();
   vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(1200);
   window.innerWidth = 1440;
 });
@@ -47,9 +38,6 @@ afterEach(() => {
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
 });
-
-const scrollIntoView = (ratio: number) =>
-  act(() => observe({ isIntersecting: ratio > 0, intersectionRatio: ratio }));
 
 it('draws the ten parts on the floor', () => {
   const { container } = render(<PartsFloor />);

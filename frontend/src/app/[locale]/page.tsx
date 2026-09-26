@@ -1,4 +1,5 @@
 import { SheetMain } from '@/components/SheetMain';
+import { About } from '@/features/home/About';
 import { Capabilities } from '@/features/home/Capabilities';
 import { Hero } from '@/features/home/Hero';
 import { Services } from '@/features/home/Services';
@@ -12,6 +13,7 @@ export default async function HomePage({ params }: PageProps<'/[locale]'>) {
       <Hero locale={locale} />
       <Services locale={locale} />
       <Capabilities locale={locale} />
+      <About locale={locale} />
     </SheetMain>
   );
 }
