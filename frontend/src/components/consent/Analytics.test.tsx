@@ -46,3 +46,11 @@ it('loads Google Analytics right away for a visitor who accepted before', async 
   const { container } = await renderAnalytics();
   expect(container.querySelectorAll('script')).toHaveLength(2);
 });
+
+it('keeps the tag switched off for a visitor who refused', async () => {
+  localStorage.setItem('sugo-cookie', 'no');
+  const { unmount } = await renderAnalytics();
+  const disabled = (window as unknown as Record<string, unknown>)['ga-disable-G-TEST123'];
+  unmount();
+  expect(disabled).toBe(true);
+});

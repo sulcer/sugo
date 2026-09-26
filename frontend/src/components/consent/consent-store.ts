@@ -12,6 +12,8 @@ declare global {
 const listeners = new Set<() => void>();
 /** Holds the choice for this page view when storage is blocked (private mode, strict settings). */
 let unstoredConsent: Consent | null = null;
+/** The Google Analytics property on this page, once <Analytics> has connected it. */
+let measurementId: string | null = null;
 
 export function readConsent(): Consent | null {
   if (unstoredConsent) return unstoredConsent;
@@ -29,7 +31,7 @@ export function writeConsent(value: Consent) {
   } catch {
     unstoredConsent = value;
   }
-  window.gtag?.('consent', 'update', { analytics_storage: value === 'yes' ? 'granted' : 'denied' });
+  applyToAnalytics(value);
   listeners.forEach((listener) => listener());
 }
 
@@ -50,7 +52,7 @@ export function withdrawConsent() {
   } catch {
     // Storage blocked: the choice only ever lived in `unstoredConsent`.
   }
-  window.gtag?.('consent', 'update', { analytics_storage: 'denied' });
+  applyToAnalytics(null);
   expireAnalyticsCookies();
   listeners.forEach((listener) => listener());
 }
@@ -68,4 +70,28 @@ function expireAnalyticsCookies() {
     document.cookie = expired;
     for (const domain of domains) document.cookie = `${expired}; domain=.${domain}`;
   }
+}
+
+/**
+ * Keeps the live analytics tag in step with the choice, here and in every other open tab: storage
+ * denied, and Google's opt-out switch set, which also stops the cookieless pings consent mode still
+ * sends. Returns the function that disconnects it again.
+ */
+export function connectAnalytics(id: string) {
+  measurementId = id;
+  const onStorage = (event: StorageEvent) => {
+    if (event.key === CONSENT_KEY || event.key === null) applyToAnalytics(readConsent());
+  };
+  window.addEventListener('storage', onStorage);
+  applyToAnalytics(readConsent());
+  return () => {
+    window.removeEventListener('storage', onStorage);
+    if (measurementId === id) measurementId = null;
+  };
+}
+
+function applyToAnalytics(consent: Consent | null) {
+  const granted = consent === 'yes';
+  if (measurementId) (window as unknown as Record<string, unknown>)[`ga-disable-${measurementId}`] = !granted;
+  window.gtag?.('consent', 'update', { analytics_storage: granted ? 'granted' : 'denied' });
 }

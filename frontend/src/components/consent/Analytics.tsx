@@ -1,9 +1,9 @@
 'use client';
 
 import Script from 'next/script';
-import { useSyncExternalStore } from 'react';
+import { useEffect, useSyncExternalStore } from 'react';
 import { analyticsBootstrap, isMeasurementId } from './analytics-bootstrap';
-import { readConsent, subscribeConsent } from './consent-store';
+import { connectAnalytics, readConsent, subscribeConsent } from './consent-store';
 
 /** Google Analytics, loaded only after the visitor accepted cookies (never before, never on refusal). */
 export function Analytics({ measurementId }: { measurementId: string }) {
@@ -11,6 +11,11 @@ export function Analytics({ measurementId }: { measurementId: string }) {
     subscribeConsent,
     () => readConsent() === 'yes',
     () => false,
+  );
+  // Every later choice, in this tab or another, reaches the tag through the store.
+  useEffect(
+    () => (isMeasurementId(measurementId) ? connectAnalytics(measurementId) : undefined),
+    [measurementId],
   );
   if (!accepted || !isMeasurementId(measurementId)) return null;
   return (
