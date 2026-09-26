@@ -34,11 +34,6 @@ export type Stage = { canvas: HTMLCanvasElement; scene: Scene; render(): void; d
  */
 export function createStage({ host, size, viewBox, preserveDrawingBuffer = false }: StageOptions): Stage {
   const canvas = document.createElement('canvas');
-  if (host) {
-    host.append(canvas);
-    // Settle the canvas's transparent starting style, so raising its opacity fades it in.
-    canvas.getBoundingClientRect();
-  }
   const [width, height] = size;
   const renderer = new WebGLRenderer({ canvas, antialias: true, alpha: true, preserveDrawingBuffer });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -61,6 +56,13 @@ export function createStage({ host, size, viewBox, preserveDrawingBuffer = false
   const camera = new OrthographicCamera(-halfW, halfW, halfH, -halfH, -2000, 2000);
   camera.position.set(cx, -cy, 500);
   camera.lookAt(cx, -cy, 0);
+
+  // Only a working stage reaches the page (without WebGL the renderer above has thrown).
+  if (host) {
+    host.append(canvas);
+    // Settle the canvas's transparent starting style, so raising its opacity fades it in.
+    canvas.getBoundingClientRect();
+  }
 
   return {
     canvas,

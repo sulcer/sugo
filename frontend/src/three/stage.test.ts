@@ -1,11 +1,16 @@
 import { expect, it, vi } from 'vitest';
 import { createStage } from './stage';
 
-const recorded = vi.hoisted(() => ({ canvases: [] as HTMLCanvasElement[], frustums: [] as number[][] }));
+const recorded = vi.hoisted(() => ({
+  canvases: [] as HTMLCanvasElement[],
+  frustums: [] as number[][],
+  webgl: true,
+}));
 vi.mock('three', async (importOriginal) => {
   const three = await importOriginal<typeof import('three')>();
   class FakeRenderer {
     constructor({ canvas }: { canvas: HTMLCanvasElement }) {
+      if (!recorded.webgl) throw new Error('Error creating WebGL context.');
       recorded.canvases.push(canvas);
     }
     setPixelRatio() {}
@@ -55,4 +60,15 @@ it('frames the view box at its current size, as an SVG with "meet" does', () => 
   recorded.frustums.length = 0;
   stageIn(document.createElement('div'));
   expect(recorded.frustums).toEqual([[-300, 300, 100, -100]]);
+});
+
+it('leaves nothing in the host when the browser cannot create a WebGL context', () => {
+  const host = document.createElement('div');
+  recorded.webgl = false;
+  try {
+    expect(() => stageIn(host)).toThrow();
+  } finally {
+    recorded.webgl = true;
+  }
+  expect(host.childElementCount).toBe(0);
 });
