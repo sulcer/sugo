@@ -5,7 +5,7 @@ const LOCALITY = 'Jakobski Dol';
 
 export const COMPANY = {
   name: 'SUGO d.o.o.',
-  url: 'https://sugo.si',
+  url: 'https://www.sugo.si',
   founded: 2010,
   street: 'Spodnji Jakobski Dol 45',
   postalCode: POSTAL_CODE,
