@@ -111,9 +111,7 @@ function Inquiry({
 
   const emailError = tried && !LOOKS_LIKE_EMAIL.test(email);
   const consentError = tried && !consent;
-  // The server reports a field the browser let through as `invalid`; only the address can be one.
-  const serverError =
-    state.status === 'error' && copy.errors[state.reason === 'invalid' ? 'email' : state.reason];
+  const serverError = state.status === 'error' && copy.errors[state.reason];
 
   const addFiles = (incoming: File[]) => {
     const merged = [...files];

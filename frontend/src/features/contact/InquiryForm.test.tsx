@@ -160,6 +160,12 @@ describe('InquiryForm', () => {
     expect(await screen.findByText(`! ${copy.errors.sendFailed}`)).toBeInTheDocument();
   });
 
+  it('does not blame the address for a rejection it did not cause', async () => {
+    const user = renderForm({ status: 'error', reason: 'invalid' });
+    await fillAndSend(user);
+    expect(await screen.findByText(`! ${copy.errors.invalid}`)).toBeInTheDocument();
+  });
+
   it('tells the visitor to wait when the address has run out of attempts', async () => {
     const user = renderForm({ status: 'error', reason: 'rateLimited' });
     await fillAndSend(user);

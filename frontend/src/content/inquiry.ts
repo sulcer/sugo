@@ -21,6 +21,7 @@ export const INQUIRY: Localized<{
   errors: {
     email: string;
     consent: string;
+    invalid: string;
     fileType: string;
     tooMany: string;
     tooLarge: string;
@@ -49,6 +50,7 @@ export const INQUIRY: Localized<{
     errors: {
       email: 'Vpišite e-poštni naslov.',
       consent: 'Potrdite izjavo o varovanju podatkov.',
+      invalid: 'Preverite vnose in poskusite znova.',
       fileType: 'Podprte so datoteke PDF, STEP in DXF.',
       tooMany: 'Priložite največ 5 datotek.',
       tooLarge: 'Datoteke skupaj presegajo 4 MB — pošljite jih na cncgolob@gmail.com.',
@@ -77,6 +79,7 @@ export const INQUIRY: Localized<{
     errors: {
       email: 'Bitte E-Mail-Adresse eingeben.',
       consent: 'Bitte Datenschutzerklärung bestätigen.',
+      invalid: 'Bitte prüfen Sie Ihre Eingaben und versuchen Sie es erneut.',
       fileType: 'Unterstützt werden PDF-, STEP- und DXF-Dateien.',
       tooMany: 'Bitte höchstens 5 Dateien anhängen.',
       tooLarge: 'Die Dateien überschreiten zusammen 4 MB — senden Sie sie an cncgolob@gmail.com.',
@@ -107,6 +110,7 @@ export const INQUIRY: Localized<{
     errors: {
       email: 'Please enter your e-mail address.',
       consent: 'Please confirm the privacy policy.',
+      invalid: 'Please check your entries and try again.',
       fileType: 'PDF, STEP and DXF files are supported.',
       tooMany: 'Please attach at most 5 files.',
       tooLarge: 'The files exceed 4 MB in total — send them to cncgolob@gmail.com.',
