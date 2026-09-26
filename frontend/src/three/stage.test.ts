@@ -5,6 +5,7 @@ const recorded = vi.hoisted(() => ({
   canvases: [] as HTMLCanvasElement[],
   frustums: [] as number[][],
   webgl: true,
+  lostContexts: 0,
 }));
 vi.mock('three', async (importOriginal) => {
   const three = await importOriginal<typeof import('three')>();
@@ -17,7 +18,9 @@ vi.mock('three', async (importOriginal) => {
     setSize() {}
     render() {}
     dispose() {}
-    forceContextLoss() {}
+    forceContextLoss() {
+      recorded.lostContexts++;
+    }
   }
   class RecordingCamera extends three.OrthographicCamera {
     constructor(left: number, right: number, top: number, bottom: number, near?: number, far?: number) {
@@ -71,4 +74,10 @@ it('leaves nothing in the host when the browser cannot create a WebGL context', 
     recorded.webgl = true;
   }
   expect(host.childElementCount).toBe(0);
+});
+
+it('gives its WebGL context back when disposed, so tapping part after part never hits the browser limit', () => {
+  recorded.lostContexts = 0;
+  stageIn(document.createElement('div')).dispose();
+  expect(recorded.lostContexts).toBe(1);
 });

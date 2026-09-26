@@ -37,14 +37,20 @@ export function startSpin(model: ModelScene, { still = false }: { still?: boolea
   canvas.addEventListener('pointerup', onPointerUp);
   canvas.addEventListener('pointercancel', onPointerUp);
 
+  let drawn: { progress: number; turn: number } | null = null;
   const tick = (now: number) => {
     const dt = Math.min(0.05, (now - last) / 1000);
     last = now;
     const progress = tiltInMs ? Math.min(1, (now - start) / tiltInMs) : 1;
-    model.pose(3, progress);
     if (progress >= 1 && !still && !drag && !document.hidden) angle += dt * SPIN_RAD_PER_S;
-    model.spinTo(model.restAngle * progress + angle);
-    model.render();
+    const turn = model.restAngle * progress + angle;
+    // A model at rest (held still, or the tab hidden) is not redrawn until it moves again.
+    if (drawn?.progress !== progress || drawn.turn !== turn) {
+      model.pose(3, progress);
+      model.spinTo(turn);
+      model.render();
+      drawn = { progress, turn };
+    }
     frame = requestAnimationFrame(tick);
   };
   frame = requestAnimationFrame(tick);
