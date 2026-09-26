@@ -20,7 +20,8 @@ export default defineConfig({
   webServer: {
     command: `npm run build && npm run start -- -p ${PORT}`,
     url: `http://localhost:${PORT}`,
-    reuseExistingServer: !process.env.CI,
+    // Never reuse a stray server: it could be running with the real Gmail credentials.
+    reuseExistingServer: false,
     timeout: 240_000,
     // Inquiries must never leave the machine during a test run.
     env: { MAIL_TRANSPORT: 'json' },
