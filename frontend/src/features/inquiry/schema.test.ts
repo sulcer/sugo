@@ -46,6 +46,14 @@ describe('inquirySchema', () => {
   it('rejects a message longer than the limit', () => {
     expect(issuesOf({ ...submission, message: 'a'.repeat(5001) })).toEqual(['message']);
   });
+
+  it('counts a line break once however the browser encodes it', () => {
+    const lines = Array.from({ length: 2500 }, () => 'a').join('\r\n');
+    expect(inquirySchema.parse({ ...submission, message: lines })).toEqual({
+      ...submission,
+      message: lines.replaceAll('\r\n', '\n'),
+    });
+  });
 });
 
 describe('checkFiles', () => {
