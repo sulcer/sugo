@@ -2,6 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 import { WEBGL } from './webgl';
 
 test.use({ launchOptions: WEBGL });
+test.skip(({ browserName }) => browserName !== 'chromium', 'the SwiftShader flags are Chromium-only');
 
 /** Sheets the header and footer link to that this branch has not built yet. */
 const NOT_YET_BUILT = [
@@ -71,6 +72,7 @@ test('survives tapping every part of the catalogue in a row', async ({ page, isM
   for (let index = 0; index < 20; index++) {
     await buttons.nth(index).click();
     await expect(cards(page).locator('[aria-pressed="true"]')).toHaveCount(1);
+    await expect(cards(page).locator('[aria-pressed="true"] canvas')).toHaveCount(1);
     await expect(page.locator('canvas')).toHaveCount(1);
   }
   expect(trouble).toEqual([]);
