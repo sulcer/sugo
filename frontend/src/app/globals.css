@@ -13,8 +13,14 @@
   --color-accent-active: #132a80;
   --color-rule: rgb(30 33 36 / 0.18);
 
-  --font-sans: var(--font-instrument-sans), system-ui, sans-serif;
-  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
+  --font-sans: var(--font-instrument-sans), sans-serif;
+  --font-mono: var(--font-plex-mono), monospace;
+
+  /* The design inherits line-height: normal; size utilities must not smuggle in their own. */
+  --text-xs--line-height: normal;
+  --text-sm--line-height: normal;
+  --text-base--line-height: normal;
+  --text-lg--line-height: normal;
 
   --text-display: clamp(34px, 3.7cqw, 54px);
   --text-display--line-height: 1.08;
@@ -37,9 +43,21 @@
   --container-rail: 640px;
 }
 
+/*
+ * The design's styles are written against the browser defaults, not Tailwind's preflight: content-box
+ * sizing (flex bases and max-widths exclude padding and borders), normal line height and underlined
+ * links. Restore those so every measurement ports 1:1; use `box-border` where the design asks for it.
+ */
 @layer base {
+  *,
+  ::before,
+  ::after {
+    box-sizing: content-box;
+  }
+
   html {
     background: var(--color-paper);
+    line-height: normal;
   }
 
   body {
@@ -52,6 +70,7 @@
 
   a {
     color: var(--color-ink);
+    text-decoration-line: underline;
   }
 
   a:hover {
