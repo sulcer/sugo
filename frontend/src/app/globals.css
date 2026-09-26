@@ -7,7 +7,8 @@
   --color-panel-hover: #fffffc;
   --color-ink: #1e2124;
   --color-grey: #5c6166;
-  --color-grey-light: #8a8f94;
+  /* The design's #8A8F94 gives 2.9:1 on paper; darkened along its hue to the lightest AA grey (4.55:1). */
+  --color-grey-light: #696e73;
   --color-accent: #1f3fbf;
   --color-accent-hover: #18329a;
   --color-accent-active: #132a80;
@@ -58,6 +59,12 @@
   html {
     background: var(--color-paper);
     line-height: normal;
+    /* Anchors (the skip link, /kontakt#risba) land below the sticky header, not under it. */
+    scroll-padding-top: 61px;
+
+    @media (width >= 900px) {
+      scroll-padding-top: 73px;
+    }
   }
 
   body {
