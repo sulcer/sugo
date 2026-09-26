@@ -37,7 +37,7 @@ export function HeaderBar({ locale, copy, logo }: HeaderBarProps) {
 
   return (
     <>
-      <div className="flex h-15 @nav:mx-auto @nav:h-18 @nav:max-w-sheet @nav:border-x @nav:border-rule">
+      <div className="relative flex h-15 bg-paper @nav:mx-auto @nav:box-border @nav:h-18 @nav:max-w-sheet @nav:border-x @nav:border-rule">
         <Link
           href={localePath(locale, 'home')}
           onClick={closeMenu}
@@ -60,7 +60,7 @@ export function HeaderBar({ locale, copy, logo }: HeaderBarProps) {
               >
                 {SHEET_NUMBER[sheet]}
               </span>
-              <span className="truncate text-base font-medium tracking-[-.005em]">{copy.names[sheet]}</span>
+              <span className="truncate text-[16px] font-medium tracking-[-.005em]">{copy.names[sheet]}</span>
             </Link>
           ))}
         </nav>
@@ -68,7 +68,7 @@ export function HeaderBar({ locale, copy, logo }: HeaderBarProps) {
         <div
           role="group"
           aria-label={copy.language}
-          className="flex flex-none items-center gap-0.5 border-l border-rule px-2 @nav:border-l-0 @nav:px-4"
+          className="flex flex-none items-center border-l border-rule px-2 @nav:gap-0.5 @nav:border-l-0 @nav:px-4"
         >
           {LOCALES.map((language) => (
             <Link
@@ -108,53 +108,55 @@ export function HeaderBar({ locale, copy, logo }: HeaderBarProps) {
             aria-label={copy.menu}
             className="absolute inset-x-0 top-full border-b-[1.5px] border-ink bg-paper"
           >
-            <div className="grid grid-cols-1 gap-px bg-rule">
-              {SHEETS.map((sheet) => (
-                <Link
-                  key={sheet}
-                  href={localePath(locale, sheet)}
-                  aria-current={route === sheet ? 'page' : undefined}
-                  onClick={closeMenu}
-                  className="group flex min-w-0 flex-col gap-2.5 bg-paper p-4 text-ink no-underline hover:bg-panel hover:text-ink aria-[current=page]:shadow-[inset_0_-3px_0_var(--color-accent)]"
-                >
-                  <span
-                    aria-hidden="true"
-                    className="flex items-baseline justify-between font-mono text-[11px] leading-none font-medium tracking-[.1em]"
+            <div className="mx-auto box-border max-w-sheet border-x border-rule">
+              <div className="grid grid-cols-1 gap-px bg-rule">
+                {SHEETS.map((sheet) => (
+                  <Link
+                    key={sheet}
+                    href={localePath(locale, sheet)}
+                    aria-current={route === sheet ? 'page' : undefined}
+                    onClick={closeMenu}
+                    className="group flex min-w-0 flex-col gap-2.5 bg-paper p-4 text-ink no-underline hover:bg-panel hover:text-ink aria-[current=page]:shadow-[inset_0_-3px_0_var(--color-accent)]"
                   >
-                    <span className="text-grey group-aria-[current=page]:text-accent">
-                      {SHEET_NUMBER[sheet]}
+                    <span
+                      aria-hidden="true"
+                      className="flex items-baseline justify-between font-mono text-[11px] leading-none font-medium tracking-[.1em]"
+                    >
+                      <span className="text-grey group-aria-[current=page]:text-accent">
+                        {SHEET_NUMBER[sheet]}
+                      </span>
+                      {route === sheet && (
+                        <span className="text-[10px] tracking-[.12em] text-accent uppercase">
+                          ● {copy.currentSheet}
+                        </span>
+                      )}
                     </span>
-                    {route === sheet && (
-                      <span className="text-[10px] tracking-[.12em] text-accent uppercase">
-                        ● {copy.currentSheet}
+                    <span className="flex flex-col gap-1.5">
+                      <span className="flex items-baseline justify-between gap-3">
+                        <span className="text-[clamp(20px,2vw,26px)] font-medium tracking-[-.01em]">
+                          {copy.names[sheet]}
+                        </span>
+                        <span aria-hidden="true" className="font-mono text-base">
+                          →
+                        </span>
                       </span>
-                    )}
-                  </span>
-                  <span className="flex flex-col gap-1.5">
-                    <span className="flex items-baseline justify-between gap-3">
-                      <span className="text-[clamp(20px,2vw,26px)] font-medium tracking-[-.01em]">
-                        {copy.names[sheet]}
-                      </span>
-                      <span aria-hidden="true" className="font-mono text-base">
-                        →
-                      </span>
+                      <span className="text-sm leading-[1.4] text-grey">{copy.descriptions[sheet]}</span>
                     </span>
-                    <span className="text-sm leading-[1.4] text-grey">{copy.descriptions[sheet]}</span>
+                  </Link>
+                ))}
+              </div>
+              <div className="flex flex-wrap items-stretch border-t border-rule">
+                <button
+                  type="button"
+                  onClick={closeMenu}
+                  className="ml-auto flex min-h-13 flex-none cursor-pointer items-center gap-2.5 border-l border-rule px-5 font-mono text-xs leading-none font-medium tracking-[.12em] uppercase hover:text-accent"
+                >
+                  {copy.close}
+                  <span aria-hidden="true" className="text-base">
+                    −
                   </span>
-                </Link>
-              ))}
-            </div>
-            <div className="flex flex-wrap items-stretch border-t border-rule">
-              <button
-                type="button"
-                onClick={closeMenu}
-                className="ml-auto flex min-h-13 flex-none cursor-pointer items-center gap-2.5 border-l border-rule px-5 font-mono text-xs leading-none font-medium tracking-[.12em] uppercase hover:text-accent"
-              >
-                {copy.close}
-                <span aria-hidden="true" className="text-base">
-                  −
-                </span>
-              </button>
+                </button>
+              </div>
             </div>
           </nav>
         </div>
