@@ -15,6 +15,3 @@ const getSnapshot = () => typeof window.matchMedia === 'function' && window.matc
 export function usePrefersReducedMotion(): boolean {
   return useSyncExternalStore(subscribe, getSnapshot, () => false);
 }
-
-/** Same check for imperative code outside React. */
-export const prefersReducedMotion = getSnapshot;

@@ -1,26 +1,24 @@
 import { expect, it } from 'vitest';
-import { circle, clipSegment, line, polyline, rect, round2, roundedRect } from './path';
+import { circle, clipSegment, line, polyline, rect, round2, roundedRect, type Point } from './path';
 
 it('rounds to two decimals like the design engine', () => {
   expect(round2(1.23456)).toBe(1.23);
 });
 
-it('builds open and closed polylines from rounded points', () => {
-  expect(
-    polyline([
-      [0, 0],
-      [1.005, 2],
-    ]),
-  ).toBe('M0 0 L1 2');
-  expect(
-    polyline(
-      [
-        [0, 0],
-        [1, 2],
-      ],
-      true,
-    ),
-  ).toBe('M0 0 L1 2 Z');
+it('builds an open polyline from rounded points', () => {
+  const points: Point[] = [
+    [0, 0],
+    [1.005, 2],
+  ];
+  expect(polyline(points)).toBe('M0 0 L1 2');
+});
+
+it('closes a polyline on request', () => {
+  const points: Point[] = [
+    [0, 0],
+    [1, 2],
+  ];
+  expect(polyline(points, true)).toBe('M0 0 L1 2 Z');
 });
 
 it('builds a line segment', () => {

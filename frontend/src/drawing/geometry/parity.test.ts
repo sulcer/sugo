@@ -8,7 +8,7 @@ import { describe, expect, it } from 'vitest';
 import fixtures from '../__fixtures__/design-geometry.json';
 import type { Drawing } from './layer';
 import { PART_GEOMETRY, type PartKind } from './parts-table';
-import { PARTS_FLOOR, floorPlacements } from './batch';
+import { PARTS_FLOOR, floorPlacements } from './parts-floor';
 import { drawSubject, viewBoxOf, type DrawingSubject } from './index';
 import { MACHINE_KINDS, drawMachine } from './machines';
 import { drawMap } from './map';
@@ -73,25 +73,30 @@ function toDesignShape(drawing: Drawing): DesignDrawing {
 const kinds = (type: 'turned' | 'milled') =>
   (Object.keys(PART_GEOMETRY) as PartKind[]).filter((kind) => PART_GEOMETRY[kind].type === type);
 
-describe.each(kinds('turned'))('turned part %s', (kind) => {
-  it.each(['front', 'full'] as const)('matches the design engine in the %s view at every scale', (views) => {
+const SCALES = fixtures.k;
+const VIEWS = ['front', 'full'] as const;
+const turnedCases = kinds('turned').flatMap((kind) =>
+  VIEWS.flatMap((views) => SCALES.map((k) => [kind, views, k] as const)),
+);
+
+it.each(turnedCases)(
+  'draws turned part %s in the %s view at k = %s like the design engine',
+  (kind, views, k) => {
     const part = PART_GEOMETRY[kind];
     if (part.type !== 'turned') throw new Error(`${kind} is not turned`);
-    for (const k of fixtures.k) {
-      expect(toDesignShape(drawTurned(part, k, views))).toEqual(partFixtures[kind][views][String(k)]);
-    }
-  });
+    expect(toDesignShape(drawTurned(part, k, views))).toEqual(partFixtures[kind][views][String(k)]);
+  },
+);
+
+const milledCases = kinds('milled').flatMap((kind) => SCALES.map((k) => [kind, k] as const));
+
+it.each(milledCases)('draws milled part %s at k = %s like the design engine', (kind, k) => {
+  const part = PART_GEOMETRY[kind];
+  if (part.type !== 'milled') throw new Error(`${kind} is not milled`);
+  expect(toDesignShape(drawMilled(part, k))).toEqual(partFixtures[kind].front[String(k)]);
 });
 
 describe.each(kinds('milled'))('milled part %s', (kind) => {
-  it('matches the design engine at every scale', () => {
-    const part = PART_GEOMETRY[kind];
-    if (part.type !== 'milled') throw new Error(`${kind} is not milled`);
-    for (const k of fixtures.k) {
-      expect(toDesignShape(drawMilled(part, k))).toEqual(partFixtures[kind].front[String(k)]);
-    }
-  });
-
   it('matches the design engine without the section-plane marks', () => {
     const part = PART_GEOMETRY[kind];
     if (part.type !== 'milled') throw new Error(`${kind} is not milled`);
@@ -99,18 +104,17 @@ describe.each(kinds('milled'))('milled part %s', (kind) => {
   });
 });
 
-describe.each(MACHINE_KINDS)('machine %s', (kind) => {
-  it('matches the design engine at every scale', () => {
-    const machineFixtures = fixtures.machines as Record<string, Record<string, DesignDrawing>>;
-    for (const k of fixtures.k) {
-      expect(toDesignShape(drawMachine(kind, k))).toEqual(machineFixtures[kind][String(k)]);
-    }
-  });
+const machineFixtures = fixtures.machines as Record<string, Record<string, DesignDrawing>>;
+const machineCases = MACHINE_KINDS.flatMap((kind) => SCALES.map((k) => [kind, k] as const));
+
+it.each(machineCases)('draws machine %s at k = %s like the design engine', (kind, k) => {
+  expect(toDesignShape(drawMachine(kind, k))).toEqual(machineFixtures[kind][String(k)]);
 });
 
-it('draws the location map exactly like the design engine at every scale', () => {
-  const mapFixtures = fixtures.map as Record<string, DesignDrawing>;
-  for (const k of fixtures.k) expect(toDesignShape(drawMap(k))).toEqual(mapFixtures[String(k)]);
+const mapFixtures = fixtures.map as Record<string, DesignDrawing>;
+
+it.each(SCALES)('draws the location map at k = %s like the design engine', (k) => {
+  expect(toDesignShape(drawMap(k))).toEqual(mapFixtures[String(k)]);
 });
 
 it('lays out the parts floor with the design items', () => {
@@ -138,6 +142,26 @@ it('places each floor item with the design transform', () => {
   ]);
 });
 
+it('shows end views for the round parts on the floor and plan views for the milled ones', () => {
+  expect(floorPlacements(1).map((placement) => placement.layer.view)).toEqual([
+    'b',
+    'a',
+    'a',
+    'b',
+    'b',
+    'a',
+    'a',
+    'b',
+    'a',
+    'a',
+  ]);
+});
+
+it('leaves the section-plane arrows off the milled parts on the floor', () => {
+  const milled = floorPlacements(1).filter((_, i) => PARTS_FLOOR.items[i].view === 'p');
+  expect(milled.map((placement) => placement.layer.fills)).toEqual([[], []]);
+});
+
 const SUBJECTS: DrawingSubject[] = [
   { type: 'part', kind: 'flange', views: 'full' },
   { type: 'part', kind: 'r01', views: 'front' },
@@ -152,6 +176,7 @@ it.each(SUBJECTS)('knows the view box of %o without drawing it, at any scale', (
   ]);
 });
 
-it('covers every part the design engine was sampled for', () => {
+// Guards the tables above: a part recorded from the design but missing from the port would never be compared.
+it('compares every part recorded from the design engine', () => {
   expect(Object.keys(PART_GEOMETRY).sort()).toEqual(Object.keys(partFixtures).sort());
 });

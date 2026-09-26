@@ -41,7 +41,7 @@ export function TechnicalDrawing({ subject, nominalWidth, aspect, hover, classNa
       style={{ aspectRatio: String(boxAspect) }}
       onMouseEnter={hover ? animateHover : undefined}
     >
-      <DrawingSvg ref={svgRef} drawing={drawSubject(subject, k)} k={k} />
+      <DrawingSvg ref={svgRef} drawing={drawSubject(subject, k)} />
     </div>
   );
 }

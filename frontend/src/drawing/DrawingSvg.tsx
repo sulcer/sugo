@@ -133,7 +133,6 @@ export function useDrawingId() {
 
 type DrawingSvgProps = {
   drawing: Drawing;
-  k: number;
   preserveAspectRatio?: string;
   className?: string;
   /** Extra SVG drawn over the drawing in the same coordinates (e.g. tool paths). */
@@ -141,7 +140,7 @@ type DrawingSvgProps = {
   ref?: Ref<SVGSVGElement>;
 };
 
-export function DrawingSvg({ drawing, k, preserveAspectRatio, className, children, ref }: DrawingSvgProps) {
+export function DrawingSvg({ drawing, preserveAspectRatio, className, children, ref }: DrawingSvgProps) {
   const id = useDrawingId();
   return (
     <svg
@@ -156,7 +155,7 @@ export function DrawingSvg({ drawing, k, preserveAspectRatio, className, childre
       aria-hidden="true"
       focusable="false"
     >
-      <DrawingDefs id={id} viewBox={drawing.viewBox} k={k} />
+      <DrawingDefs id={id} viewBox={drawing.viewBox} k={drawing.layers[0].k} />
       {drawing.layers.map((layer, i) => (
         <DrawingLayerGroup key={i} layer={layer} id={id} />
       ))}

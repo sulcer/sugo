@@ -1,4 +1,4 @@
-import { createLayer, type Drawing, type ViewBox } from './layer';
+import { createLayer, type Drawing, type DrawingLayer, type ViewBox } from './layer';
 import type { MilledPart } from './parts-table';
 import { circle, line, polyline, rect, roundedRect } from './path';
 
@@ -156,7 +156,7 @@ function visibleSegments(
   return segments;
 }
 
-function drawPlan(plan: ReturnType<typeof createLayer>, part: MilledPart, offset: number) {
+function drawPlan(plan: DrawingLayer, part: MilledPart, offset: number) {
   plan.thick.push(rect(0, offset, part.W, part.D));
   (part.pockets ?? []).forEach((q) => plan.thick.push(roundedRect(q.x, offset + q.y, q.w, q.d, q.r)));
   (part.holes ?? []).forEach((h) => {
@@ -168,13 +168,7 @@ function drawPlan(plan: ReturnType<typeof createLayer>, part: MilledPart, offset
 }
 
 /** Section plane A–A across the plan: chain line, thick ends, view arrows and letters. */
-function drawSectionPlane(
-  plan: ReturnType<typeof createLayer>,
-  width: number,
-  y: number,
-  pad: number,
-  k: number,
-) {
+function drawSectionPlane(plan: DrawingLayer, width: number, y: number, pad: number, k: number) {
   const overhang = pad * 0.55;
   const arrow = Math.min(8 * k, pad * 0.5);
   plan.centre.push(line(-overhang, y, width + overhang, y));
