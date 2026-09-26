@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { NAVIGATION } from '@/content/shell';
 import { LOCALES, type Locale } from '@/i18n/locales';
 import { localePath, parsePathname, type RouteKey } from '@/i18n/routes';
@@ -24,12 +24,20 @@ export function HeaderBar({ locale, copy, logo }: HeaderBarProps) {
   const pathname = usePathname();
   const { route } = parsePathname(pathname);
   const [menuOpen, setMenuOpen] = useState(false);
+  const menuButton = useRef<HTMLButtonElement>(null);
   const closeMenu = () => setMenuOpen(false);
+  /** Closing from inside the panel must not strand keyboard focus on a removed element. */
+  const closeMenuAndRefocus = () => {
+    setMenuOpen(false);
+    menuButton.current?.focus();
+  };
 
   useEffect(() => {
     if (!menuOpen) return;
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setMenuOpen(false);
+      if (event.key !== 'Escape') return;
+      setMenuOpen(false);
+      menuButton.current?.focus();
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
@@ -87,6 +95,7 @@ export function HeaderBar({ locale, copy, logo }: HeaderBarProps) {
         </div>
 
         <button
+          ref={menuButton}
           type="button"
           aria-expanded={menuOpen}
           aria-controls={MENU_ID}
@@ -102,11 +111,16 @@ export function HeaderBar({ locale, copy, logo }: HeaderBarProps) {
 
       {menuOpen && (
         <div className="@nav:hidden">
-          <div aria-hidden="true" onClick={closeMenu} className="fixed inset-0 -z-10 bg-ink/14" />
+          <div
+            aria-hidden="true"
+            data-menu-backdrop=""
+            onClick={closeMenu}
+            className="fixed inset-0 -z-10 bg-ink/14"
+          />
           <nav
             id={MENU_ID}
             aria-label={copy.menu}
-            className="absolute inset-x-0 top-full border-b-[1.5px] border-ink bg-paper"
+            className="absolute inset-x-0 top-full max-h-[calc(100dvh-61px)] overflow-y-auto border-b-[1.5px] border-ink bg-paper"
           >
             <div className="mx-auto box-border max-w-sheet border-x border-rule">
               <div className="grid grid-cols-1 gap-px bg-rule">
@@ -148,7 +162,7 @@ export function HeaderBar({ locale, copy, logo }: HeaderBarProps) {
               <div className="flex flex-wrap items-stretch border-t border-rule">
                 <button
                   type="button"
-                  onClick={closeMenu}
+                  onClick={closeMenuAndRefocus}
                   className="ml-auto flex min-h-13 flex-none cursor-pointer items-center gap-2.5 border-l border-rule px-5 font-mono text-xs leading-none font-medium tracking-[.12em] uppercase hover:text-accent"
                 >
                   {copy.close}

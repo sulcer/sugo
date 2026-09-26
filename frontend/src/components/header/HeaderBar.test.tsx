@@ -84,6 +84,28 @@ it('closes the menu with its close button', async () => {
   expect(screen.queryByRole('link', { name: /Šest CNC strojev/ })).not.toBeInTheDocument();
 });
 
+it('returns focus to the menu button after closing with Escape', async () => {
+  renderAt('/', 'sl');
+  await userEvent.click(screen.getByRole('button', { name: /Meni/ }));
+  screen.getByRole('link', { name: /Šest CNC strojev/ }).focus();
+  await userEvent.keyboard('{Escape}');
+  expect(screen.getByRole('button', { name: /Meni/ })).toHaveFocus();
+});
+
+it('returns focus to the menu button after closing with the close button', async () => {
+  renderAt('/', 'sl');
+  await userEvent.click(screen.getByRole('button', { name: /Meni/ }));
+  await userEvent.click(screen.getByRole('button', { name: /Zapri/ }));
+  expect(screen.getByRole('button', { name: /Meni/ })).toHaveFocus();
+});
+
+it('closes the menu when the dimmed page behind it is clicked', async () => {
+  const { container } = renderAt('/', 'sl');
+  await userEvent.click(screen.getByRole('button', { name: /Meni/ }));
+  await userEvent.click(container.querySelector('[data-menu-backdrop]')!);
+  expect(screen.getByRole('button', { name: /Meni/ })).toHaveAttribute('aria-expanded', 'false');
+});
+
 it('closes the menu when a sheet is chosen', async () => {
   renderAt('/', 'sl');
   await userEvent.click(screen.getByRole('button', { name: /Meni/ }));
