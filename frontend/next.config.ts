@@ -12,6 +12,8 @@ const nextConfig: NextConfig = {
   reactCompiler: true,
   poweredByHeader: false,
   agentRules: false,
+  // 4 MB of drawings plus multipart overhead, under Vercel's 4.5 MB cap on request bodies.
+  experimental: { serverActions: { bodySizeLimit: '4.5mb' } },
   async headers() {
     return [{ source: '/:path*', headers: securityHeaders }];
   },

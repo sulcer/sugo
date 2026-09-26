@@ -11,6 +11,9 @@ const PAGES = [
   '/izdelki',
   '/de/izdelki',
   '/en/izdelki',
+  '/kontakt',
+  '/de/kontakt',
+  '/en/kontakt',
   '/ne-obstaja',
 ];
 

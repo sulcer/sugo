@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { LOCALES } from '@/i18n/locales';
 import * as company from './company';
+import * as contact from './contact';
 import * as home from './home';
+import * as inquiry from './inquiry';
 import * as machinePark from './machine-park';
 import * as machines from './machines';
 import * as products from './products';
@@ -10,7 +12,9 @@ import * as shell from './shell';
 /** Every `Localized` export, i.e. every object keyed by all three locales. */
 const localizedExports = Object.entries({
   ...company,
+  ...contact,
   ...home,
+  ...inquiry,
   ...machinePark,
   ...machines,
   ...products,
