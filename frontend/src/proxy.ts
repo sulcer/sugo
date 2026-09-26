@@ -6,9 +6,10 @@ export function proxy(request: NextRequest) {
   if (decision.action === 'next') return NextResponse.next();
   const url = request.nextUrl.clone();
   url.pathname = decision.pathname;
-  return decision.action === 'redirect' ? NextResponse.redirect(url, 308) : NextResponse.rewrite(url);
+  if (decision.action === 'redirect') return NextResponse.redirect(url, 308);
+  return NextResponse.rewrite(url, decision.status ? { status: decision.status } : undefined);
 }
 
 export const config = {
-  matcher: ['/((?!_next|api|.*\\..*).*)'],
+  matcher: ['/((?!_next/|.*\\..*).*)'],
 };

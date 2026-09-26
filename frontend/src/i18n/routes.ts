@@ -10,6 +10,9 @@ export const ROUTES = {
 
 export type RouteKey = keyof typeof ROUTES;
 
+/** Internal page every unknown URL is rewritten to (with status 404) by the proxy. */
+export const NOT_FOUND_SLUG = '404';
+
 export const ROUTE_KEYS = Object.keys(ROUTES) as RouteKey[];
 
 export function localePath(locale: Locale, route: RouteKey, hash?: string): string {

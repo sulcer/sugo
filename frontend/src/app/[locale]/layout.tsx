@@ -20,6 +20,8 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://sugo.si'),
 };
 
+export const dynamicParams = false;
+
 export function generateStaticParams() {
   return LOCALES.map((locale) => ({ locale }));
 }
