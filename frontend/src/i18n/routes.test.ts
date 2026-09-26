@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest';
 import { localePath, parsePathname } from './routes';
 
 describe('localePath', () => {

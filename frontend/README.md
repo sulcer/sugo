@@ -23,4 +23,3 @@ npm run dev        # http://localhost:3000
 | ------------------------------ | ------------------------------------------------------------- |
 | `EMAIL`, `EMAIL_PASS`          | Gmail account that sends inquiry e-mails (app password)       |
 | `NEXT_PUBLIC_GOOGLE_ANALYTICS` | GA4 measurement id; analytics loads only after cookie consent |
-| `MAIL_TRANSPORT=json`          | Local / test only: build inquiry e-mails without sending them |

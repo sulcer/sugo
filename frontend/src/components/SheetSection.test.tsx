@@ -1,19 +1,30 @@
 import { render, screen } from '@testing-library/react';
+import { expect, it } from 'vitest';
 import { SheetSection } from './SheetSection';
 
-it('renders the zone number as a first rail hidden from assistive tech, then the content', () => {
+const renderZone = (divider?: boolean) =>
   render(
-    <SheetSection number="03" aria-label="Zmogljivosti">
+    <SheetSection number="03" divider={divider} aria-label="Zmogljivosti">
       <p>content</p>
     </SheetSection>,
   );
-  const section = screen.getByRole('region', { name: 'Zmogljivosti' });
-  expect(section.firstElementChild).toHaveTextContent('03');
-  expect(section.firstElementChild).toHaveAttribute('aria-hidden', 'true');
-  expect(section).toHaveClass('border-t');
+
+it('puts the zone number in the first child, the margin rail', () => {
+  renderZone();
+  expect(screen.getByRole('region', { name: 'Zmogljivosti' }).firstElementChild).toHaveTextContent('03');
 });
 
-it('drops the top hairline for the first zone of a sheet', () => {
-  render(<SheetSection number="01" divider={false} aria-label="Uvod" />);
-  expect(screen.getByRole('region', { name: 'Uvod' })).not.toHaveClass('border-t');
+it('hides the zone number from assistive tech', () => {
+  renderZone();
+  expect(screen.getByText('03')).toHaveAttribute('aria-hidden', 'true');
+});
+
+it('rules zones off from each other with a hairline by default', () => {
+  renderZone();
+  expect(screen.getByRole('region', { name: 'Zmogljivosti' })).toHaveClass('border-t');
+});
+
+it('drops the hairline for the first zone of a sheet', () => {
+  renderZone(false);
+  expect(screen.getByRole('region', { name: 'Zmogljivosti' })).not.toHaveClass('border-t');
 });
