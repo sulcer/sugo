@@ -31,6 +31,22 @@ test('shows the company history', async ({ page }) => {
   await expect(page.getByText('SUGO d.o.o. founded').filter({ visible: true }).first()).toBeVisible();
 });
 
+test('never scrolls sideways, whatever the language and width', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'sweeps desktop and tablet widths');
+  const overflowing: string[] = [];
+  for (const path of Object.keys(HEADINGS)) {
+    for (const width of [1440, 1280, 1100, 1024, 900, 760, 700]) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto(path);
+      const overflow = await page.evaluate(
+        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      );
+      if (overflow > 0) overflowing.push(`${path} @ ${width}px: ${overflow}px`);
+    }
+  }
+  expect(overflowing).toEqual([]);
+});
+
 test.describe('for visitors who prefer reduced motion', () => {
   test.use({ reducedMotion: 'reduce' });
 

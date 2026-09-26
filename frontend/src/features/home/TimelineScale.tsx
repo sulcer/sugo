@@ -17,6 +17,8 @@ const PLACEMENTS = [
   { level: 2, flip: false },
   { level: 0, flip: false },
 ];
+/** A label may run this far past either end of the scale: the narrowest sheet margin. */
+const LABEL_OVERHANG_PX = 16;
 const ARM_DELAY_MS = 600;
 const VISIBLE_RATIO = 0.6;
 const START_MS = 200;
@@ -60,7 +62,7 @@ export function TimelineScale({ locale, className }: TimelineScaleProps) {
   }, []);
 
   return (
-    <div ref={rootRef} aria-hidden="true" className={cn('relative h-[300px] w-full', className)}>
+    <div ref={rootRef} aria-hidden="true" className={cn('@container relative h-[300px] w-full', className)}>
       {TIMELINE.map((event, index) => {
         const { level, flip } = PLACEMENTS[index % PLACEMENTS.length];
         const height = 58 + level * 72;
@@ -76,10 +78,14 @@ export function TimelineScale({ locale, className }: TimelineScaleProps) {
             <div
               data-tl="label"
               className={cn(
-                'absolute box-border flex w-max min-w-[120px] flex-col border-b border-ink pb-2 whitespace-nowrap',
+                'absolute box-border flex w-max min-w-[120px] flex-col border-b border-ink pb-2 text-balance',
                 flip ? 'right-0 pr-2.5 text-right' : 'left-0 pl-2.5 text-left',
               )}
-              style={{ bottom: height - 4 }}
+              // One line, as drawn, while it fits beside its leader; wrapped rather than past the sheet.
+              style={{
+                bottom: height - 4,
+                maxWidth: `calc(${flip ? x : 100 - x}cqw + ${LABEL_OVERHANG_PX}px)`,
+              }}
             >
               <span className="text-[14px]/[1.35]">{event.label[locale]}</span>
             </div>
