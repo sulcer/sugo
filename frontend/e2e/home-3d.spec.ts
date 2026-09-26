@@ -17,12 +17,14 @@ test('restarts the hero machining cleanly after a resize', async ({ page, isMobi
   const errors = collectErrors(page);
   await page.goto('/');
   const hero = page.locator('main > section').first();
-  const done = hero.locator('[data-op="done"]');
-  await expect(done.first()).toBeVisible({ timeout: 10_000 });
+  const operation = (state: 'pending' | 'active' | 'done') => hero.locator(`[data-op="${state}"]`);
+  // The server sends the strip finished; only a running 3D turn has an active operation and a canvas.
+  await expect(operation('active')).toHaveCount(1, { timeout: 15_000 });
+  await expect(hero.locator('canvas')).toHaveCount(1);
   // A 24 % narrower hero: past the drawing's 12 % remeasure tolerance, still wide enough to machine.
   await page.setViewportSize({ width: 520, height: 900 });
-  await expect(done).toHaveCount(0);
-  await expect(done.first()).toBeVisible({ timeout: 10_000 });
+  await expect(operation('pending')).toHaveCount(6);
+  await expect(operation('active')).toHaveCount(1, { timeout: 15_000 });
   expect([errors, await hero.locator('canvas').count()]).toEqual([[], 1]);
 });
 
