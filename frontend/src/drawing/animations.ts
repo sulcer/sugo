@@ -53,7 +53,7 @@ export function revealHatch(svg: SVGSVGElement, durationMs: number) {
   const width = svg.viewBox.baseVal.width;
   const start = performance.now();
   const step = (now: number) => {
-    // A frame's timestamp is the start of the frame, so it can predate `start`; a negative width throws.
+    // A frame's timestamp is the start of the frame, so it can predate `start`; a negative width is invalid.
     const progress = Math.min(1, Math.max(0, (now - start) / durationMs));
     clip.setAttribute('width', String(round2(width * progress)));
     if (progress < 1) requestAnimationFrame(step);

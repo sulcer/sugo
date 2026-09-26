@@ -74,7 +74,7 @@ it('marks the chosen process chip as the pressed one', async () => {
 it('announces how many parts of the catalogue are shown', async () => {
   renderCatalog('sl');
   await userEvent.click(screen.getByRole('button', { name: /Rezkanje/ }));
-  expect(screen.getByText('6 / 20 prikazanih delov')).toHaveAttribute('aria-live', 'polite');
+  expect(screen.getByRole('status')).toHaveTextContent('6 / 20 prikazanih delov');
 });
 
 it('offers only the materials the parts are actually made of', () => {
@@ -91,11 +91,11 @@ it('offers only the materials the parts are actually made of', () => {
   ]);
 });
 
-it('offers a way back when no part matches both filters', async () => {
+it('says so when no part matches both filters', async () => {
   renderCatalog('sl');
   await userEvent.click(screen.getByRole('button', { name: /Rezkanje/ }));
   await userEvent.selectOptions(screen.getByLabelText('Material'), 'PVC');
-  expect(screen.queryAllByRole('listitem')).toEqual([]);
+  expect(screen.getByText('Za izbrani filter ni delov.')).toBeInTheDocument();
 });
 
 it('restores the whole catalogue when the filters are reset', async () => {

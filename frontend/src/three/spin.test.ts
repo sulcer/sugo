@@ -110,3 +110,22 @@ it('still turns by hand when held still', () => {
   advanceTo(20);
   expect(state.angle).toBeCloseTo(0.35 + 50 * 0.012);
 });
+
+it('draws a model held still only when something changes', () => {
+  const { model, state } = fakeModel();
+  startSpin(model, { still: true });
+  advanceTo(0);
+  advanceTo(16);
+  advanceTo(32);
+  expect(state.renders).toBe(1);
+});
+
+it('draws a model held still again while it is turned by hand', () => {
+  const { model, state, canvas } = fakeModel();
+  startSpin(model, { still: true });
+  advanceTo(0);
+  canvas.dispatchEvent(new PointerEvent('pointerdown', { clientX: 100, pointerId: 1 }));
+  canvas.dispatchEvent(new PointerEvent('pointermove', { clientX: 150, pointerId: 1 }));
+  advanceTo(16);
+  expect(state.renders).toBe(2);
+});

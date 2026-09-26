@@ -4,11 +4,11 @@ import { SheetSection } from '@/components/SheetSection';
 import { PRODUCTS } from '@/content/products';
 import { catalogParts } from '@/features/products/catalog-parts';
 import { ProductCatalog } from '@/features/products/ProductCatalog';
-import { isLocale } from '@/i18n/locales';
+import { DEFAULT_LOCALE, isLocale } from '@/i18n/locales';
 
 export async function generateMetadata({ params }: PageProps<'/[locale]/izdelki'>): Promise<Metadata> {
   const { locale } = await params;
-  return { title: isLocale(locale) ? PRODUCTS[locale].title : undefined };
+  return { title: PRODUCTS[isLocale(locale) ? locale : DEFAULT_LOCALE].title };
 }
 
 export default async function ProductsPage({ params }: PageProps<'/[locale]/izdelki'>) {

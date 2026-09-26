@@ -55,8 +55,11 @@ test('keeps at most one part live at a time', async ({ page }) => {
   const flange = page.getByRole('button', { name: 'Prirobnica' });
   await flange.click();
   await expect(page.locator('canvas')).toHaveCount(1);
-  await page.getByRole('button', { name: 'Medeninasta matica' }).click();
+  const nut = page.getByRole('button', { name: 'Medeninasta matica' });
+  await nut.click();
   await expect(flange).toHaveAttribute('aria-pressed', 'false');
+  await expect(nut).toHaveAttribute('aria-pressed', 'true');
+  await expect(nut.locator('canvas')).toHaveCount(1);
   await expect(page.locator('canvas')).toHaveCount(1);
 });
 

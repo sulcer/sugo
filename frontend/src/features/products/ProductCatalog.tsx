@@ -9,8 +9,8 @@ import { availableMaterials, filterParts, processCounts } from './filter-parts';
 import { MaterialFilter } from './MaterialFilter';
 import { ProcessFilter } from './ProcessFilter';
 
-/** Width a card's drawing is first laid out for; it is re-measured before the first paint. */
-const CARD_WIDTH = 290;
+/** A card's drawing width on a desktop sheet (four columns); the server renders at this scale until hydration measures. */
+const CARD_WIDTH = 250;
 
 type ProductCatalogProps = { copy: ProductsCopy; parts: readonly CatalogPart[] };
 
@@ -45,7 +45,7 @@ export function ProductCatalog({ copy, parts }: ProductCatalogProps) {
         />
       </div>
 
-      <p aria-live="polite" className="font-mono text-xs leading-none text-grey">
+      <p role="status" className="font-mono text-xs leading-none text-grey">
         {shown.length} / {parts.length} {copy.result}
       </p>
 
